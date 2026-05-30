@@ -668,30 +668,172 @@
   .empty-state h3 { font-size: 18px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
   .empty-state p { font-size: 14px; }
 
-  /* MOBILE */
+  /* MOBILE NAV BAR */
+  .mobile-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    z-index: 200;
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  }
+  .mobile-nav-inner {
+    display: flex; align-items: center; justify-content: space-around;
+  }
+  .mobile-nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 12px; border-radius: var(--radius2);
+    cursor: pointer; color: var(--text3); font-size: 10px;
+    transition: all 0.15s; background: none; border: none;
+    font-family: 'DM Sans', sans-serif; min-width: 56px;
+    position: relative;
+  }
+  .mobile-nav-item i { font-size: 20px; }
+  .mobile-nav-item.active { color: var(--accent2); }
+  .mobile-nav-item .mnav-badge {
+    position: absolute; top: 4px; right: 10px;
+    background: var(--accent); color: white;
+    font-size: 9px; font-weight: 700;
+    padding: 1px 5px; border-radius: 10px; min-width: 16px; text-align: center;
+  }
+
+  /* LOAD MORE / PROGRESS */
+  .load-progress {
+    text-align: center; padding: 20px;
+    font-size: 13px; color: var(--text3);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .load-progress .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  #loadMoreBtn {
+    display: block; margin: 16px auto;
+    padding: 10px 28px; background: var(--bg3);
+    border: 1px solid var(--border2); border-radius: 20px;
+    color: var(--text2); font-size: 13px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+  }
+  #loadMoreBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* VIRTUAL SCROLL SENTINEL */
+  #scrollSentinel { height: 1px; }
+
+  /* SIDEBAR OVERLAY */
   .sidebar-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.6); z-index: 99;
   }
-  @media (max-width: 768px) {
-    .sidebar { transform: translateX(-100%); }
-    .sidebar.open { transform: translateX(0); }
-    .sidebar-overlay.open { display: block; }
-    .main { margin-left: 0; }
-    .menu-btn { display: flex; }
-    .photo-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+
+  /* ====== TABLET (max 1024px) ====== */
+  @media (max-width: 1024px) {
+    .sidebar { width: 220px; }
+    .main { margin-left: 220px; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .content { padding: 16px; }
-    .topbar { padding: 12px 16px; }
-    .bulk-bar { width: calc(100% - 32px); border-radius: var(--radius); flex-wrap: wrap; bottom: 16px; }
-    .lb-nav { display: none; }
-    #lockScreen .lock-card { padding: 32px 24px; }
-    .album-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   }
-  @media (max-width: 480px) {
-    .photo-grid { grid-template-columns: repeat(2, 1fr); }
-    .page-title { font-size: 18px; }
+
+  /* ====== MOBILE (max 768px) ====== */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); width: 280px; z-index: 150; }
+    .sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.5); }
+    .sidebar-overlay.open { display: block; }
+    .main { margin-left: 0; padding-bottom: 70px; }
+    .menu-btn { display: flex; }
+
+    /* Topbar */
+    .topbar { padding: 10px 14px; gap: 8px; }
+    .search-wrap { max-width: none; }
+    .topbar-actions .icon-btn:not(:last-child):not(:nth-last-child(2)) { display: none; }
+    .avatar { width: 32px; height: 32px; font-size: 13px; }
+
+    /* Grid */
+    .photo-grid { grid-template-columns: repeat(3, 1fr); gap: 3px; }
+    .photo-grid.list-view { grid-template-columns: 1fr; gap: 6px; }
+    .photo-card { border-radius: 6px; border-color: transparent; }
+    .photo-card:hover { transform: none; }
+    .photo-info { padding: 6px 8px; }
+    .photo-name { font-size: 11px; }
+    .photo-meta { font-size: 10px; }
+    .photo-actions { gap: 2px; }
+    .photo-action-btn { width: 26px; height: 26px; font-size: 11px; }
+
+    /* Stats */
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stat-card { padding: 14px; }
+    .stat-value { font-size: 22px; }
+    .stat-icon { width: 36px; height: 36px; font-size: 15px; margin-bottom: 10px; }
+
+    /* Content */
+    .content { padding: 12px; }
+    .page-header { margin-bottom: 14px; gap: 8px; }
+    .page-title { font-size: 17px; }
     .header-actions .btn span { display: none; }
+    .header-actions .btn { padding: 7px 10px; }
+    .filter-bar { gap: 6px; margin-bottom: 14px; }
+    .filter-chip { padding: 5px 10px; font-size: 11px; }
+
+    /* Albums */
+    .album-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .album-cover { height: 110px; }
+
+    /* Bulk bar */
+    .bulk-bar {
+      width: calc(100% - 24px); border-radius: var(--radius);
+      bottom: 76px; padding: 8px 14px; gap: 8px; flex-wrap: wrap;
+    }
+    .bulk-action span { display: none; }
+
+    /* Lightbox */
+    .lb-nav { display: none; }
+    .lb-actions { flex-wrap: wrap; justify-content: center; gap: 6px; bottom: 16px; }
+    .lb-action-btn { padding: 8px 12px; font-size: 12px; }
+    #lbContent { padding: 0 12px; }
+
+    /* Lock screen */
+    #lockScreen .lock-card { padding: 28px 20px; max-width: 340px; }
+    .lock-title { font-size: 20px; }
+    .pin-btn { padding: 14px; font-size: 16px; }
+
+    /* Mobile nav visible */
+    .mobile-nav { display: block; }
+
+    /* Modal */
+    .modal { max-width: 100% !important; margin: 0 12px; }
+    .modal-overlay { align-items: flex-end; padding: 0; }
+    .modal { border-radius: var(--radius) var(--radius) 0 0; }
+
+    /* Upload */
+    .upload-zone { padding: 28px 16px; }
+    .upload-zone i { font-size: 28px; }
+    .upload-zone h3 { font-size: 14px; }
+  }
+
+  /* ====== SMALL PHONES (max 480px) ====== */
+  @media (max-width: 480px) {
+    .photo-grid { grid-template-columns: repeat(2, 1fr); gap: 2px; }
+    .photo-grid.list-view { grid-template-columns: 1fr; gap: 5px; }
+    .topbar { padding: 8px 12px; }
+    .search-input { font-size: 13px; padding: 8px 10px 8px 34px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat-card { padding: 12px; }
+    .stat-value { font-size: 20px; }
+    .content { padding: 10px; }
+    .album-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .filter-bar { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+    .filter-bar::-webkit-scrollbar { display: none; }
+  }
+
+  /* ====== LANDSCAPE MOBILE ====== */
+  @media (max-width: 768px) and (orientation: landscape) {
+    .mobile-nav { padding: 4px 0 calc(4px + env(safe-area-inset-bottom)); }
+    .main { padding-bottom: 56px; }
+    .photo-grid { grid-template-columns: repeat(4, 1fr); }
+    #lockScreen .lock-card { padding: 16px 20px; }
+    .pin-pad { gap: 6px; }
+    .pin-btn { padding: 10px; }
   }
 </style>
 </head>
@@ -1261,6 +1403,33 @@
 <!-- TOAST -->
 <div id="toast"></div>
 
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav-inner">
+    <button class="mobile-nav-item active" id="mnav-photos" onclick="showPage('photos',null);setMobileNav('photos')">
+      <i class="fa-solid fa-images"></i>
+      <span>Photos</span>
+      <span class="mnav-badge" id="mnavCount">0</span>
+    </button>
+    <button class="mobile-nav-item" id="mnav-albums" onclick="showPage('albums',null);setMobileNav('albums')">
+      <i class="fa-solid fa-layer-group"></i>
+      <span>Albums</span>
+    </button>
+    <button class="mobile-nav-item" id="mnav-upload" onclick="showPage('upload',null);setMobileNav('upload')">
+      <i class="fa-solid fa-cloud-arrow-up"></i>
+      <span>Upload</span>
+    </button>
+    <button class="mobile-nav-item" id="mnav-drive" onclick="showPage('settings',null);setMobileNav('drive')">
+      <i class="fa-brands fa-google-drive" style="color:#4285f4"></i>
+      <span>Drive</span>
+    </button>
+    <button class="mobile-nav-item" id="mnav-more" onclick="toggleSidebar()">
+      <i class="fa-solid fa-bars"></i>
+      <span>More</span>
+    </button>
+  </div>
+</nav>
+
 <script>
 // ====== DATA ======
 let photos = JSON.parse(localStorage.getItem('dg_photos') || '[]');
@@ -1373,6 +1542,11 @@ function showPage(name, el) {
   closeSidebar();
   if (name==='trash') renderTrash();
 }
+function setMobileNav(name) {
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('mnav-' + name);
+  if (btn) btn.classList.add('active');
+}
 function toggleSidebar()  { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open'); }
 function closeSidebar()   { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
 
@@ -1398,38 +1572,119 @@ function getFilteredPhotos() {
   return list;
 }
 
+// ====== VIRTUAL / LAZY RENDER ======
+const RENDER_PAGE_SIZE = 60; // how many cards per render batch
+let renderedCount = 0;
+let renderObserver = null;
+
 function renderPhotos() {
   filteredPhotos = getFilteredPhotos();
   const grid = document.getElementById('photoGrid');
   const count = document.getElementById('photoCount');
-  if (count) count.textContent = '('+filteredPhotos.length+')';
+  if (count) count.textContent = '(' + filteredPhotos.length + ')';
   const nav = document.getElementById('navPhotoCount');
   if (nav) nav.textContent = photos.length;
-  if (filteredPhotos.length===0) {
+  const mnavC = document.getElementById('mnavCount');
+  if (mnavC) mnavC.textContent = photos.length > 99 ? '99+' : photos.length || '';
+
+  if (filteredPhotos.length === 0) {
     grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-image"></i><h3>কোনো ছবি নেই</h3><p>ছবি আপলোড করুন বা Google Drive সংযুক্ত করুন</p></div>';
     return;
   }
-  grid.innerHTML = filteredPhotos.map((p,idx) => {
-    const sel = selectedItems.has(p.id);
-    const thumb = p.thumb
-      ? `<img src="${p.thumb}" class="photo-thumb" alt="${p.name}" onerror="this.style.display='none'">`
-      : `<div class="photo-thumb-placeholder"><span style="font-size:40px">${p.emoji||'🖼️'}</span>${p.type==='video'?'<span style="font-size:11px;color:var(--text3)"><i class="fa-solid fa-video"></i> Video</span>':''}</div>`;
-    return `<div class="photo-card ${sel?'selected':''}" id="card-${p.id}" ondblclick="openLightbox(${idx})">
-      <div class="select-check" onclick="toggleSelect(event,${p.id})">${sel?'<i class="fa-solid fa-check"></i>':''}</div>
-      <div onclick="openLightbox(${idx})">${thumb}</div>
-      <div class="photo-info">
-        <div class="photo-name">${p.name}</div>
-        <div class="photo-meta"><span>${p.size}</span><span>${formatDate(p.date)}</span></div>
-      </div>
-      <div class="photo-actions">
-        <button class="photo-action-btn" onclick="toggleStar(event,${p.id})" title="${p.starred?'Unstar':'Star'}"><i class="${p.starred?'fa-solid':'fa-regular'} fa-star" ${p.starred?'style="color:var(--gold)"':''}></i></button>
-        <button class="photo-action-btn" onclick="showRename(event,${p.id})" title="Rename"><i class="fa-solid fa-pen"></i></button>
-        <button class="photo-action-btn" onclick="sharePhoto(event,${p.id})" title="Share"><i class="fa-solid fa-share"></i></button>
-        <button class="photo-action-btn" onclick="downloadPhoto(event,${p.id})" title="Download"><i class="fa-solid fa-download"></i></button>
-        <button class="photo-action-btn danger" onclick="deletePhoto(event,${p.id})" title="Delete"><i class="fa-solid fa-trash"></i></button>
-      </div>
-    </div>`;
-  }).join('');
+
+  // Reset and render first batch
+  renderedCount = 0;
+  grid.innerHTML = '';
+  renderBatch(grid, Math.min(RENDER_PAGE_SIZE, filteredPhotos.length));
+  setupInfiniteScroll(grid);
+}
+
+function makePhotoCard(p, idx) {
+  const sel = selectedItems.has(p.id);
+  const thumb = p.thumb
+    ? `<img src="${p.thumb}" class="photo-thumb" alt="${p.name}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
+    : `<div class="photo-thumb-placeholder"><span style="font-size:32px">${p.emoji || '🖼️'}</span>${p.type === 'video' ? '<span style="font-size:10px;color:var(--text3)"><i class="fa-solid fa-video"></i></span>' : ''}</div>`;
+  return `<div class="photo-card ${sel ? 'selected' : ''}" id="card-${p.id}" ondblclick="openLightbox(${idx})">
+    <div class="select-check" onclick="toggleSelect(event,'${p.id}')">${sel ? '<i class="fa-solid fa-check"></i>' : ''}</div>
+    <div onclick="openLightbox(${idx})">${thumb}</div>
+    <div class="photo-info">
+      <div class="photo-name">${p.name}</div>
+      <div class="photo-meta"><span>${p.size}</span><span>${formatDate(p.date)}</span></div>
+    </div>
+    <div class="photo-actions">
+      <button class="photo-action-btn" onclick="toggleStar(event,'${p.id}')" title="${p.starred ? 'Unstar' : 'Star'}"><i class="${p.starred ? 'fa-solid' : 'fa-regular'} fa-star" ${p.starred ? 'style="color:var(--gold)"' : ''}></i></button>
+      <button class="photo-action-btn" onclick="showRename(event,'${p.id}')" title="Rename"><i class="fa-solid fa-pen"></i></button>
+      <button class="photo-action-btn" onclick="sharePhoto(event,'${p.id}')" title="Share"><i class="fa-solid fa-share"></i></button>
+      <button class="photo-action-btn" onclick="downloadPhoto(event,'${p.id}')" title="Download"><i class="fa-solid fa-download"></i></button>
+      <button class="photo-action-btn danger" onclick="deletePhoto(event,'${p.id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
+    </div>
+  </div>`;
+}
+
+function renderBatch(grid, upTo) {
+  const fragment = document.createDocumentFragment();
+  const end = Math.min(upTo, filteredPhotos.length);
+  for (let i = renderedCount; i < end; i++) {
+    const div = document.createElement('div');
+    div.innerHTML = makePhotoCard(filteredPhotos[i], i);
+    fragment.appendChild(div.firstChild);
+  }
+  // Remove sentinel if exists
+  const oldSentinel = document.getElementById('scrollSentinel');
+  if (oldSentinel) oldSentinel.remove();
+
+  grid.appendChild(fragment);
+  renderedCount = end;
+
+  // Add sentinel for next batch
+  if (renderedCount < filteredPhotos.length) {
+    const sentinel = document.createElement('div');
+    sentinel.id = 'scrollSentinel';
+    sentinel.style.cssText = 'height:1px;grid-column:1/-1';
+    grid.appendChild(sentinel);
+    // Also show count
+    showLoadStatus(grid);
+  } else {
+    hideLoadStatus();
+  }
+}
+
+function showLoadStatus(grid) {
+  let el = document.getElementById('loadStatusBar');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loadStatusBar';
+    el.className = 'load-progress';
+    el.style.cssText = 'grid-column:1/-1';
+    grid.after(el);
+  }
+  el.innerHTML = `<span style="color:var(--text3)">দেখাচ্ছে <strong style="color:var(--text2)">${renderedCount}</strong> / <strong style="color:var(--accent2)">${filteredPhotos.length}</strong></span>
+    <button id="loadMoreBtn" onclick="manualLoadMore()">আরো দেখুন</button>`;
+}
+function hideLoadStatus() {
+  const el = document.getElementById('loadStatusBar');
+  if (el) el.remove();
+}
+
+function manualLoadMore() {
+  const grid = document.getElementById('photoGrid');
+  renderBatch(grid, renderedCount + RENDER_PAGE_SIZE);
+}
+
+function setupInfiniteScroll(grid) {
+  if (renderObserver) renderObserver.disconnect();
+  renderObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && renderedCount < filteredPhotos.length) {
+      renderBatch(grid, renderedCount + RENDER_PAGE_SIZE);
+    }
+  }, { rootMargin: '300px' });
+
+  const checkSentinel = () => {
+    const s = document.getElementById('scrollSentinel');
+    if (s) renderObserver.observe(s);
+    else if (renderedCount < filteredPhotos.length) setTimeout(checkSentinel, 100);
+  };
+  checkSentinel();
 }
 
 function setView(v,btn) {
@@ -1458,13 +1713,15 @@ function updateStats() {
 // ====== SELECTION ======
 function toggleSelect(e,id) {
   e.stopPropagation();
-  if(selectedItems.has(id)) selectedItems.delete(id); else selectedItems.add(id);
+  const sid = String(id);
+  if(selectedItems.has(sid)) selectedItems.delete(sid); else selectedItems.add(sid);
   updateBulkBar();
-  const card = document.getElementById('card-'+id);
-  card.classList.toggle('selected', selectedItems.has(id));
-  card.querySelector('.select-check').innerHTML = selectedItems.has(id)?'<i class="fa-solid fa-check"></i>':'';
+  const card = document.getElementById('card-'+sid);
+  if(!card) return;
+  card.classList.toggle('selected', selectedItems.has(sid));
+  card.querySelector('.select-check').innerHTML = selectedItems.has(sid)?'<i class="fa-solid fa-check"></i>':'';
 }
-function selectAll()     { filteredPhotos.forEach(p=>selectedItems.add(p.id)); updateBulkBar(); renderPhotos(); }
+function selectAll()     { filteredPhotos.forEach(p=>selectedItems.add(String(p.id))); updateBulkBar(); renderPhotos(); }
 function clearSelection(){ selectedItems.clear(); updateBulkBar(); renderPhotos(); }
 function updateBulkBar() {
   const bar=document.getElementById('bulkBar'), n=selectedItems.size;
@@ -1475,26 +1732,29 @@ function updateBulkBar() {
 // ====== PHOTO ACTIONS ======
 function toggleStar(e,id) {
   e.stopPropagation();
-  const p=photos.find(p=>p.id===id);
+  const sid=String(id);
+  const p=photos.find(p=>String(p.id)===sid);
   if(p){ p.starred=!p.starred; saveData(); updateStats(); renderPhotos(); showToast(p.starred?'★ Starred!':'Unstarred','success'); }
 }
 function showRename(e,id) {
   e.stopPropagation();
-  const p=photos.find(p=>p.id===id);
-  if(p){ pendingRenameId=id; document.getElementById('renameInput').value=p.name.replace(/\.[^.]+$/,''); openModal('renameModal'); }
+  const sid=String(id);
+  const p=photos.find(p=>String(p.id)===sid);
+  if(p){ pendingRenameId=sid; document.getElementById('renameInput').value=p.name.replace(/\.[^.]+$/,''); openModal('renameModal'); }
 }
 function confirmRename() {
-  const p=photos.find(p=>p.id===pendingRenameId);
+  const p=photos.find(p=>String(p.id)===String(pendingRenameId));
   if(p){ const ext=p.name.match(/\.[^.]+$/)?.[0]||''; const n=document.getElementById('renameInput').value.trim(); if(n){p.name=n+ext; saveData(); renderPhotos(); showToast('Renamed to '+p.name,'success');} }
   closeModal('renameModal');
 }
 function deletePhoto(e,id) {
   e.stopPropagation();
-  const p=photos.find(p=>p.id===id);
-  if(p){ pendingDeleteId=id; document.getElementById('deleteFileName').textContent=p.name; openModal('deleteModal'); }
+  const sid=String(id);
+  const p=photos.find(p=>String(p.id)===sid);
+  if(p){ pendingDeleteId=sid; document.getElementById('deleteFileName').textContent=p.name; openModal('deleteModal'); }
 }
 function confirmDelete() {
-  const idx=photos.findIndex(p=>p.id===pendingDeleteId);
+  const idx=photos.findIndex(p=>String(p.id)===String(pendingDeleteId));
   if(idx!==-1){ trash.push({...photos[idx],deletedAt:new Date().toISOString()}); photos.splice(idx,1); saveData(); renderPhotos(); updateStats();
     document.getElementById('navPhotoCount').textContent=photos.length;
     const tc=document.getElementById('trashCount'); tc.style.display='flex'; tc.textContent=trash.length;
@@ -1506,11 +1766,11 @@ function downloadPhoto(e,id) { e.stopPropagation(); showToast('Download started.
 
 // ====== BULK ======
 function bulkDownload() { showToast('Downloading '+selectedItems.size+' files...','info'); clearSelection(); }
-function bulkStar()     { selectedItems.forEach(id=>{const p=photos.find(p=>p.id===id);if(p)p.starred=true;}); saveData();updateStats();showToast('Starred '+selectedItems.size+' photos','success');clearSelection(); }
+function bulkStar()     { selectedItems.forEach(id=>{const p=photos.find(p=>String(p.id)===String(id));if(p)p.starred=true;}); saveData();updateStats();showToast('Starred '+selectedItems.size+' photos','success');clearSelection(); }
 function bulkMove()     { showToast('Move '+selectedItems.size+' photos','info'); clearSelection(); }
 function bulkDelete() {
   const ids=[...selectedItems];
-  ids.forEach(id=>{const idx=photos.findIndex(p=>p.id===id);if(idx!==-1){trash.push({...photos[idx],deletedAt:new Date().toISOString()});photos.splice(idx,1);}});
+  ids.forEach(id=>{const idx=photos.findIndex(p=>String(p.id)===String(id));if(idx!==-1){trash.push({...photos[idx],deletedAt:new Date().toISOString()});photos.splice(idx,1);}});
   saveData();clearSelection();renderPhotos();updateStats();
   const tc=document.getElementById('trashCount'); tc.style.display='flex'; tc.textContent=trash.length;
   showToast(ids.length+' photos moved to Trash','error');
@@ -1537,8 +1797,8 @@ function lbNavigate(dir) { currentLbIndex=(currentLbIndex+dir+filteredPhotos.len
 function downloadCurrent() { showToast('Downloading '+filteredPhotos[currentLbIndex]?.name,'info'); }
 function shareCurrent()    { navigator.clipboard?.writeText('https://drivegallery.app/share/'+(filteredPhotos[currentLbIndex]?.id)).catch(()=>{}); showToast('Share link copied!','success'); }
 function starCurrent()     { const p=filteredPhotos[currentLbIndex];if(p){p.starred=!p.starred;saveData();updateStats();showLbPhoto();showToast(p.starred?'★ Starred!':'Unstarred','success');} }
-function renameCurrent()   { closeLightbox();const p=filteredPhotos[currentLbIndex];if(p){pendingRenameId=p.id;document.getElementById('renameInput').value=p.name.replace(/\.[^.]+$/,'');openModal('renameModal');} }
-function deleteCurrent()   { closeLightbox();const p=filteredPhotos[currentLbIndex];if(p){pendingDeleteId=p.id;document.getElementById('deleteFileName').textContent=p.name;openModal('deleteModal');} }
+function renameCurrent()   { closeLightbox();const p=filteredPhotos[currentLbIndex];if(p){pendingRenameId=String(p.id);document.getElementById('renameInput').value=p.name.replace(/\.[^.]+$/,'');openModal('renameModal');} }
+function deleteCurrent()   { closeLightbox();const p=filteredPhotos[currentLbIndex];if(p){pendingDeleteId=String(p.id);document.getElementById('deleteFileName').textContent=p.name;openModal('deleteModal');} }
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('lightbox').classList.contains('open'))return;
   if(e.key==='Escape')closeLightbox();
@@ -1623,11 +1883,11 @@ function renderTrash() {
     </div>`).join('');
 }
 function restorePhoto(id) {
-  const idx=trash.findIndex(p=>p.id==id);
+  const idx=trash.findIndex(p=>String(p.id)==String(id));
   if(idx!==-1){const p={...trash[idx]};delete p.deletedAt;photos.unshift(p);trash.splice(idx,1);saveData();renderTrash();updateStats();showToast('Photo restored!','success');}
 }
 function permDelete(id) {
-  trash=trash.filter(p=>p.id!=id);saveData();renderTrash();
+  trash=trash.filter(p=>String(p.id)!=String(id));saveData();renderTrash();
   const tc=document.getElementById('trashCount');
   if(trash.length===0)tc.style.display='none'; else tc.textContent=trash.length;
   showToast('Permanently deleted','error');
@@ -1730,28 +1990,90 @@ async function fetchGoogleUserInfo(accessToken,clientId) {
   } catch(e){showToast('User info পাওয়া যায়নি: '+e.message,'error');resetConnectBtn();}
 }
 
-async function loadDrivePhotos(accessToken) {
+// ====== DRIVE FULL LOAD WITH PAGINATION ======
+let driveLoadAbort = false;
+
+async function loadDrivePhotos(accessToken, onlyNew=false) {
+  driveLoadAbort = false;
+  let pageToken = null;
+  let totalLoaded = 0;
+  let batchNum = 0;
+  const existingIds = new Set(photos.filter(p=>p.driveId).map(p=>p.driveId));
+
+  showDriveProgress(0, '...'); 
+  showToast('Google Drive থেকে সব ছবি লোড হচ্ছে...','info');
+
+  const q = encodeURIComponent("(mimeType contains 'image/' or mimeType contains 'video/') and trashed=false");
+
   try {
-    showToast('Google Drive থেকে ছবি লোড হচ্ছে...','info');
-    const q=encodeURIComponent("mimeType contains 'image/' and trashed=false");
-    const url=`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,size,createdTime,thumbnailLink)&pageSize=50&orderBy=createdTime desc`;
-    const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
-    const data=await res.json();
-    const files=data.files||[];
-    if(files.length===0){showToast('Drive-এ কোনো ছবি পাওয়া যায়নি','info');return;}
-    const existingIds=new Set(photos.filter(p=>p.driveId).map(p=>p.driveId));
-    const newPhotos=files.filter(f=>!existingIds.has(f.id)).map((f,i)=>({
-      id:'drive_'+f.id, driveId:f.id, name:f.name,
-      type:f.mimeType.startsWith('video/')?'video':'image',
-      size:f.size?(parseInt(f.size)/1048576).toFixed(1)+' MB':'—',
-      date:f.createdTime||new Date().toISOString(),
-      starred:false, color:COLORS[i%COLORS.length], emoji:'🖼️',
-      thumb:f.thumbnailLink||null, fromDrive:true
-    }));
-    photos=[...newPhotos,...photos];
-    saveData();renderPhotos();updateStats();
-    showToast('Drive থেকে '+newPhotos.length+'টি ছবি লোড হয়েছে! 🎉','success');
-  } catch(e){showToast('Drive ছবি লোড করতে পারেনি: '+e.message,'error');}
+    do {
+      if (driveLoadAbort) { showToast('লোড বন্ধ করা হয়েছে','info'); break; }
+
+      let url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,size,createdTime,thumbnailLink,imageMediaMetadata)&pageSize=100&orderBy=createdTime%20desc`;
+      if (pageToken) url += '&pageToken=' + encodeURIComponent(pageToken);
+
+      const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+      if (!res.ok) { showToast('Drive API error: ' + res.status, 'error'); break; }
+
+      const data = await res.json();
+      const files = data.files || [];
+      pageToken = data.nextPageToken || null;
+      batchNum++;
+
+      const newPhotos = files
+        .filter(f => !existingIds.has(f.id))
+        .map((f, i) => {
+          existingIds.add(f.id);
+          return {
+            id: 'drive_' + f.id, driveId: f.id, name: f.name,
+            type: f.mimeType.startsWith('video/') ? 'video' : 'image',
+            size: f.size ? (parseInt(f.size)/1048576).toFixed(1) + ' MB' : '—',
+            date: f.createdTime || new Date().toISOString(),
+            starred: false, color: COLORS[(totalLoaded+i) % COLORS.length],
+            emoji: f.mimeType.startsWith('video/') ? '🎬' : '🖼️',
+            thumb: f.thumbnailLink || null, fromDrive: true
+          };
+        });
+
+      if (newPhotos.length > 0) {
+        photos = [...newPhotos, ...photos];
+        totalLoaded += newPhotos.length;
+        showDriveProgress(totalLoaded, pageToken ? 'লোড হচ্ছে...' : 'সম্পন্ন');
+        // Render every batch for live update feel
+        if (batchNum % 2 === 0 || !pageToken) {
+          saveData(); renderPhotos(); updateStats();
+        }
+      }
+
+      // Small delay to avoid rate limiting
+      if (pageToken) await new Promise(r => setTimeout(r, 150));
+
+    } while (pageToken);
+
+    saveData(); renderPhotos(); updateStats();
+    hideDriveProgress();
+    showToast('✅ Drive থেকে মোট ' + totalLoaded + 'টি ছবি লোড হয়েছে!', 'success');
+
+  } catch(e) {
+    hideDriveProgress();
+    showToast('Drive ছবি লোড করতে পারেনি: ' + e.message, 'error');
+  }
+}
+
+function showDriveProgress(count, status) {
+  let el = document.getElementById('driveLoadProgress');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'driveLoadProgress';
+    el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:8px 18px;font-size:13px;color:var(--text2);z-index:300;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow2)';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = `<div style="width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0"></div> Drive: <strong style="color:var(--accent2)">${count}</strong> ছবি ${status}
+    <button onclick="driveLoadAbort=true;hideDriveProgress()" style="background:none;border:none;color:var(--text3);cursor:pointer;margin-left:4px;font-size:15px" title="বন্ধ করুন">✕</button>`;
+}
+function hideDriveProgress() {
+  const el = document.getElementById('driveLoadProgress');
+  if (el) el.remove();
 }
 
 function resetConnectBtn() {

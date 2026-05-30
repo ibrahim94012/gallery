@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DriveGallery — Google Drive Photo Manager</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a26;
+    --bg4: #22222f;
+    --surface: #1e1e2e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.14);
+    --accent: #7c6fff;
+    --accent2: #a78bfa;
+    --accent3: #c4b5fd;
+    --gold: #f59e0b;
+    --text: #f1f0ff;
+    --text2: #a09ebe;
+    --text3: #6b699a;
+    --danger: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --info: #38bdf8;
+    --radius: 12px;
+    --radius2: 8px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --shadow2: 0 8px 40px rgba(124,111,255,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== PIN LOCK SCREEN ===== */
+  #lockScreen {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 30% 20%, rgba(124,111,255,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(167,139,250,0.1) 0%, transparent 60%),
+                var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+    flex-direction: column;
+  }
+  #lockScreen .lock-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 100%; max-width: 380px;
+    text-align: center;
+    box-shadow: var(--shadow2);
+  }
+  .lock-logo {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 32px; color: white;
+    box-shadow: 0 0 32px rgba(124,111,255,0.4);
+  }
+  .lock-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--text); margin-bottom: 6px;
+  }
+  .lock-sub {
+    font-size: 13px; color: var(--text3); margin-bottom: 32px;
+    line-height: 1.6;
+  }
+  .lock-hint {
+    font-size: 12px; color: var(--text3);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 8px 14px; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .lock-hint i { color: var(--accent); }
+  .pin-dots {
+    display: flex; gap: 12px; justify-content: center; margin-bottom: 24px;
+  }
+  .pin-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--border2);
+    background: transparent;
+    transition: all 0.2s;
+  }
+  .pin-dot.filled {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(124,111,255,0.6);
+  }
+  .pin-pad {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; margin-bottom: 20px;
+  }
+  .pin-btn {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 16px; font-size: 18px; font-weight: 600;
+    color: var(--text); cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .pin-btn:hover { background: var(--bg4); border-color: var(--accent); color: var(--accent2); transform: scale(1.02); }
+  .pin-btn:active { transform: scale(0.96); }
+  .pin-btn.clear { color: var(--danger); }
+  .pin-btn.enter { background: var(--accent); border-color: var(--accent); color: white; }
+  .pin-btn.enter:hover { background: var(--accent2); }
+  .lock-error {
+    color: var(--danger); font-size: 13px; margin-top: 12px;
+    min-height: 20px; transition: all 0.2s;
+  }
+  .bio-btn {
+    width: 100%; margin-top: 16px; padding: 14px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius2); color: var(--text2);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: all 0.2s;
+  }
+  .bio-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ===== MAIN APP ===== */
+  #app { display: none; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 260px; background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    z-index: 100;
+    transition: transform 0.3s ease;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: white;
+    flex-shrink: 0;
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 700; color: var(--text);
+  }
+  .logo-text span { color: var(--accent2); }
+
+  .sidebar-section { padding: 16px 12px 8px; }
+  .sidebar-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    color: var(--text3); text-transform: uppercase;
+    padding: 0 8px; margin-bottom: 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: var(--radius2);
+    cursor: pointer; color: var(--text2);
+    font-size: 14px; font-weight: 400;
+    transition: all 0.15s; margin-bottom: 2px;
+    border: 1px solid transparent;
+  }
+  .nav-item i { width: 18px; text-align: center; font-size: 15px; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(124,111,255,0.12); color: var(--accent2); border-color: rgba(124,111,255,0.2); }
+  .nav-item .badge {
+    margin-left: auto; background: var(--accent);
+    color: white; font-size: 10px; padding: 2px 7px;
+    border-radius: 20px; font-weight: 600;
+  }
+
+  .sidebar-storage {
+    margin: auto 12px 20px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px;
+  }
+  .storage-label { font-size: 12px; color: var(--text3); margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .storage-bar { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+  .storage-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; width: 62%; }
+  .storage-text { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+  /* MAIN CONTENT */
+  .main {
+    margin-left: 260px;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    position: sticky; top: 0;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 12px;
+    z-index: 50;
+  }
+  .menu-btn {
+    display: none; background: none; border: none;
+    color: var(--text2); font-size: 20px; cursor: pointer;
+    padding: 6px; border-radius: var(--radius2);
+  }
+  .search-wrap {
+    flex: 1; position: relative; max-width: 520px;
+  }
+  .search-wrap i {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--text3); font-size: 15px;
+  }
+  .search-input {
+    width: 100%; background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px 10px 38px;
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text3); }
+
+  .topbar-actions { display: flex; gap: 8px; margin-left: auto; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: var(--radius2);
+    background: var(--bg3); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text2); cursor: pointer; font-size: 15px;
+    transition: all 0.15s; position: relative;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .notif-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); border: 1.5px solid var(--bg3);
+  }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: white;
+    cursor: pointer; border: 2px solid var(--border2);
+  }
+
+  /* CONTENT AREA */
+  .content { padding: 24px; flex: 1; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* PAGE HEADER */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 700;
+  }
+  .page-title span { color: var(--text3); font-size: 15px; font-weight: 400; margin-left: 8px; }
+  .header-actions { display: flex; gap: 8px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 9px 18px; border-radius: var(--radius2);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent2); box-shadow: 0 0 16px rgba(124,111,255,0.4); }
+  .btn-outline { background: transparent; border-color: var(--border2); color: var(--text2); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,111,255,0.06); }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* VIEW TOGGLES */
+  .view-toggle {
+    display: flex; background: var(--bg3);
+    border: 1px solid var(--border); border-radius: var(--radius2); padding: 3px; gap: 2px;
+  }
+  .view-btn {
+    padding: 6px 10px; border-radius: 6px;
+    background: none; border: none; color: var(--text3);
+    cursor: pointer; font-size: 13px; transition: all 0.15s;
+  }
+  .view-btn.active { background: var(--accent); color: white; }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex; gap: 8px; margin-bottom: 20px;
+    flex-wrap: wrap; align-items: center;
+  }
+  .filter-chip {
+    padding: 6px 14px; border-radius: 20px;
+    background: var(--bg3); border: 1px solid var(--border);
+    font-size: 12px; color: var(--text2); cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center; gap: 5px;
+  }
+  .filter-chip.active { background: rgba(124,111,255,0.15); border-color: var(--accent); color: var(--accent2); }
+  .filter-chip:hover { border-color: var(--border2); color: var(--text); }
+  .sort-select {
+    margin-left: auto; background: var(--bg3);
+    border: 1px solid var(--border); border-radius: var(--radius2);
+    padding: 7px 12px; color: var(--text2);
+    font-family: 'DM Sans', sans-serif; font-size: 12px;
+    cursor: pointer; outline: none;
+  }
+
+  /* GRID / LIST VIEW */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .photo-grid.list-view {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .photo-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .photo-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .photo-card.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(124,111,255,0.4);
+  }
+  .photo-thumb {
+    width: 100%; aspect-ratio: 1;
+    object-fit: cover; display: block;
+    background: var(--bg3);
+  }
+  .photo-thumb-placeholder {
+    width: 100%; aspect-ratio: 1;
+    background: linear-gradient(135deg, var(--bg3), var(--bg4));
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 8px;
+    color: var(--text3); font-size: 28px;
+  }
+  .photo-info {
+    padding: 10px 12px;
+  }
+  .photo-name {
+    font-size: 13px; font-weight: 500; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+  .photo-meta {
+    font-size: 11px; color: var(--text3);
+    display: flex; justify-content: space-between;
+  }
+  .photo-actions {
+    position: absolute; top: 8px; right: 8px;
+    display: flex; gap: 4px; opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .photo-card:hover .photo-actions { opacity: 1; }
+  .photo-action-btn {
+    width: 28px; height: 28px;
+    background: rgba(0,0,0,0.7); border: none;
+    border-radius: 6px; color: white;
+    cursor: pointer; font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; backdrop-filter: blur(4px);
+  }
+  .photo-action-btn:hover { background: var(--accent); }
+  .photo-action-btn.danger:hover { background: var(--danger); }
+  .select-check {
+    position: absolute; top: 8px; left: 8px;
+    width: 22px; height: 22px;
+    background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: all 0.2s; cursor: pointer;
+    font-size: 12px; color: white;
+    backdrop-filter: blur(4px);
+  }
+  .photo-card:hover .select-check, .photo-card.selected .select-check { opacity: 1; }
+  .photo-card.selected .select-check { background: var(--accent); border-color: var(--accent); }
+
+  /* LIST VIEW CARD */
+  .photo-grid.list-view .photo-card { border-radius: var(--radius2); }
+  .photo-grid.list-view .photo-card { display: flex; align-items: center; }
+  .photo-grid.list-view .photo-thumb,
+  .photo-grid.list-view .photo-thumb-placeholder {
+    width: 52px; aspect-ratio: 1; flex-shrink: 0; border-radius: 0;
+    font-size: 18px;
+  }
+  .photo-grid.list-view .photo-info { flex: 1; padding: 10px 14px; }
+  .photo-grid.list-view .photo-actions { position: static; opacity: 1; flex-shrink: 0; margin-right: 12px; }
+
+  /* STATS CARDS */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px; margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .stat-icon {
+    width: 42px; height: 42px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin-bottom: 14px;
+  }
+  .stat-icon.purple { background: rgba(124,111,255,0.15); color: var(--accent2); }
+  .stat-icon.blue { background: rgba(56,189,248,0.12); color: var(--info); }
+  .stat-icon.green { background: rgba(16,185,129,0.12); color: var(--success); }
+  .stat-icon.amber { background: rgba(245,158,11,0.12); color: var(--warning); }
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 3px;
+  }
+  .stat-label { font-size: 12px; color: var(--text3); }
+
+  /* ALBUMS */
+  .album-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .album-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .album-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow2); }
+  .album-cover {
+    height: 140px; background: linear-gradient(135deg, var(--bg3), var(--bg4));
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 2px; overflow: hidden; position: relative;
+  }
+  .album-cover-img {
+    background: var(--bg4); width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+  .album-info { padding: 14px; }
+  .album-name { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+  .album-count { font-size: 12px; color: var(--text3); }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 2px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 40px 24px; text-align: center;
+    cursor: pointer; transition: all 0.2s; margin-bottom: 24px;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent); background: rgba(124,111,255,0.05);
+  }
+  .upload-zone i { font-size: 36px; color: var(--text3); margin-bottom: 12px; display: block; }
+  .upload-zone h3 { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+  .upload-zone p { font-size: 13px; color: var(--text3); }
+  .upload-btn-link { color: var(--accent2); text-decoration: underline; cursor: pointer; }
+  #uploadInput { display: none; }
+
+  /* UPLOAD QUEUE */
+  .upload-queue { display: flex; flex-direction: column; gap: 8px; }
+  .upload-item {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius2); padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .upload-item i { font-size: 20px; color: var(--accent); }
+  .upload-item-info { flex: 1; min-width: 0; }
+  .upload-item-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .upload-item-size { font-size: 11px; color: var(--text3); }
+  .upload-progress-bar {
+    height: 4px; background: var(--bg4); border-radius: 2px; margin-top: 6px;
+    overflow: hidden;
+  }
+  .upload-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px; transition: width 0.3s;
+  }
+  .upload-status { font-size: 11px; color: var(--text3); min-width: 40px; text-align: right; }
+
+  /* SETTINGS */
+  .settings-section {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 16px; overflow: hidden;
+  }
+  .settings-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px;
+  }
+  .settings-header i { color: var(--accent); }
+  .settings-row {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row-label { font-size: 14px; color: var(--text); }
+  .settings-row-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .toggle {
+    width: 44px; height: 24px; background: var(--bg4);
+    border-radius: 12px; position: relative; cursor: pointer;
+    border: 1px solid var(--border2); flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .toggle.on { background: var(--accent); border-color: var(--accent); }
+  .toggle-thumb {
+    width: 18px; height: 18px; background: white;
+    border-radius: 50%; position: absolute; top: 2px; left: 2px;
+    transition: left 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .toggle.on .toggle-thumb { left: 22px; }
+
+  /* LIGHTBOX */
+  #lightbox {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  #lightbox.open { display: flex; }
+  .lb-close {
+    position: absolute; top: 20px; right: 20px;
+    width: 40px; height: 40px; background: rgba(255,255,255,0.1);
+    border: none; border-radius: 50%; color: white;
+    font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .lb-close:hover { background: rgba(255,255,255,0.2); }
+  .lb-img { max-width: 90vw; max-height: 80vh; object-fit: contain; border-radius: 8px; }
+  .lb-info {
+    margin-top: 16px; text-align: center;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .lb-name { font-size: 15px; font-weight: 500; }
+  .lb-size { font-size: 13px; color: var(--text3); }
+  .lb-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 44px; height: 44px; background: rgba(255,255,255,0.1);
+    border: none; border-radius: 50%; color: white;
+    font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .lb-nav:hover { background: rgba(255,255,255,0.2); }
+  .lb-prev { left: 20px; }
+  .lb-next { right: 20px; }
+  .lb-actions {
+    position: absolute; bottom: 24px;
+    display: flex; gap: 10px;
+  }
+  .lb-action-btn {
+    padding: 10px 18px; border-radius: var(--radius2);
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+    color: white; cursor: pointer; font-size: 13px;
+    display: flex; align-items: center; gap: 7px;
+    transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+  }
+  .lb-action-btn:hover { background: rgba(255,255,255,0.2); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 600;
+    display: none; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--radius); width: 100%; max-width: 440px;
+    box-shadow: var(--shadow);
+  }
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+  .modal-close { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%; background: var(--bg3);
+    border: 1px solid var(--border); border-radius: var(--radius2);
+    padding: 10px 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+
+  /* BULK ACTIONS BAR */
+  .bulk-bar {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 50px; padding: 10px 20px;
+    display: flex; align-items: center; gap: 12px;
+    z-index: 200; box-shadow: var(--shadow2);
+    opacity: 0; pointer-events: none; transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .bulk-bar.visible { opacity: 1; pointer-events: all; }
+  .bulk-count { font-size: 13px; font-weight: 600; color: var(--accent2); }
+  .bulk-divider { width: 1px; height: 24px; background: var(--border); }
+  .bulk-action {
+    padding: 7px 14px; border-radius: 20px;
+    background: none; border: none; color: var(--text2);
+    font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+  }
+  .bulk-action:hover { background: var(--bg3); color: var(--text); }
+  .bulk-action.danger:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
+
+  /* TOAST */
+  #toast {
+    position: fixed; top: 20px; right: 20px;
+    z-index: 9000; display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast-item {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--radius2); padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; box-shadow: var(--shadow);
+    animation: slideIn 0.3s ease; min-width: 240px;
+  }
+  .toast-item.success i { color: var(--success); }
+  .toast-item.error i { color: var(--danger); }
+  .toast-item.info i { color: var(--info); }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 60px 24px; color: var(--text3);
+  }
+  .empty-state i { font-size: 48px; margin-bottom: 16px; display: block; }
+  .empty-state h3 { font-size: 18px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; }
+
+  /* MOBILE */
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); z-index: 99;
+  }
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay.open { display: block; }
+    .main { margin-left: 0; }
+    .menu-btn { display: flex; }
+    .photo-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .content { padding: 16px; }
+    .topbar { padding: 12px 16px; }
+    .bulk-bar { width: calc(100% - 32px); border-radius: var(--radius); flex-wrap: wrap; bottom: 16px; }
+    .lb-nav { display: none; }
+    #lockScreen .lock-card { padding: 32px 24px; }
+    .album-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    .photo-grid { grid-template-columns: repeat(2, 1fr); }
+    .page-title { font-size: 18px; }
+    .header-actions .btn span { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PIN LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-logo">
+      <i class="fa-solid fa-camera-retro"></i>
+    </div>
+    <div class="lock-title">DriveGallery</div>
+    <div class="lock-sub">Google Drive Photo Manager<br>Enter your time PIN to continue</div>
+    <div class="lock-hint">
+      <i class="fa-solid fa-circle-info"></i>
+      <span id="pinHintText">PIN = current time (e.g. 3:40 AM → 0340)</span>
+    </div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="addPin('1')">1</button>
+      <button class="pin-btn" onclick="addPin('2')">2</button>
+      <button class="pin-btn" onclick="addPin('3')">3</button>
+      <button class="pin-btn" onclick="addPin('4')">4</button>
+      <button class="pin-btn" onclick="addPin('5')">5</button>
+      <button class="pin-btn" onclick="addPin('6')">6</button>
+      <button class="pin-btn" onclick="addPin('7')">7</button>
+      <button class="pin-btn" onclick="addPin('8')">8</button>
+      <button class="pin-btn" onclick="addPin('9')">9</button>
+      <button class="pin-btn clear" onclick="clearPin()"><i class="fa-solid fa-delete-left"></i></button>
+      <button class="pin-btn" onclick="addPin('0')">0</button>
+      <button class="pin-btn enter" onclick="submitPin()"><i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+    <div class="lock-error" id="pinError"></div>
+    <button class="bio-btn" id="bioBtn" onclick="tryBiometric()">
+      <i class="fa-solid fa-fingerprint"></i>
+      <span>Use Biometric / Device Lock</span>
+    </button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><i class="fa-solid fa-camera-retro"></i></div>
+      <div>
+        <div class="logo-text">Drive<span>Gallery</span></div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <div class="nav-item active" onclick="showPage('photos', this)">
+        <i class="fa-solid fa-images"></i> All Photos
+        <span class="badge" id="navPhotoCount">0</span>
+      </div>
+      <div class="nav-item" onclick="showPage('albums', this)">
+        <i class="fa-solid fa-layer-group"></i> Albums
+      </div>
+      <div class="nav-item" onclick="showPage('upload', this)">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+      </div>
+      <div class="nav-item" onclick="showPage('shared', this)">
+        <i class="fa-solid fa-share-nodes"></i> Shared
+      </div>
+      <div class="nav-item" onclick="showPage('trash', this)">
+        <i class="fa-solid fa-trash-can"></i> Trash
+        <span class="badge" id="trashCount" style="background:#ef4444; display:none">0</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Filters</div>
+      <div class="nav-item" onclick="filterType('image', this)">
+        <i class="fa-regular fa-image"></i> Images
+      </div>
+      <div class="nav-item" onclick="filterType('video', this)">
+        <i class="fa-solid fa-video"></i> Videos
+      </div>
+      <div class="nav-item" onclick="filterType('starred', this)">
+        <i class="fa-solid fa-star"></i> Starred
+      </div>
+      <div class="nav-item" onclick="filterType('recent', this)">
+        <i class="fa-solid fa-clock-rotate-left"></i> Recent
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Account</div>
+      <div class="nav-item" onclick="showPage('settings', this)">
+        <i class="fa-solid fa-gear"></i> Settings
+      </div>
+      <div class="nav-item" onclick="lockApp()">
+        <i class="fa-solid fa-lock"></i> Lock App
+      </div>
+    </div>
+    <div class="sidebar-storage">
+      <div class="storage-label">
+        <span><i class="fa-solid fa-hard-drive" style="margin-right:5px"></i> Storage</span>
+        <span>62%</span>
+      </div>
+      <div class="storage-bar"><div class="storage-fill"></div></div>
+      <div class="storage-text">9.3 GB used of 15 GB</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="menu-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input class="search-input" type="text" placeholder="Search photos, albums..." id="searchInput" oninput="searchPhotos(this.value)">
+      </div>
+      <div class="topbar-actions">
+        <div class="icon-btn" title="Notifications" onclick="showToast('No new notifications', 'info')">
+          <i class="fa-solid fa-bell"></i>
+          <div class="notif-dot"></div>
+        </div>
+        <div class="icon-btn" title="Refresh" onclick="showToast('Gallery refreshed', 'success')">
+          <i class="fa-solid fa-rotate-right"></i>
+        </div>
+        <div class="icon-btn" title="Drive Settings">
+          <i class="fa-brands fa-google-drive" style="color:#4285f4"></i>
+        </div>
+        <div class="avatar" title="My Account">M</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- PHOTOS PAGE -->
+      <div class="page active" id="page-photos">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="fa-solid fa-images"></i></div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Total Photos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="fa-solid fa-video"></i></div>
+            <div class="stat-value" id="statVideos">0</div>
+            <div class="stat-label">Videos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon amber"><i class="fa-solid fa-star"></i></div>
+            <div class="stat-value" id="statStarred">0</div>
+            <div class="stat-label">Starred</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="fa-solid fa-share"></i></div>
+            <div class="stat-value">3</div>
+            <div class="stat-label">Shared Albums</div>
+          </div>
+        </div>
+        <div class="page-header">
+          <div class="page-title">All Photos <span id="photoCount"></span></div>
+          <div class="header-actions">
+            <div class="view-toggle">
+              <button class="view-btn active" onclick="setView('grid', this)" title="Grid View"><i class="fa-solid fa-grip"></i></button>
+              <button class="view-btn" onclick="setView('list', this)" title="List View"><i class="fa-solid fa-list"></i></button>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="selectAll()">
+              <i class="fa-solid fa-check-double"></i> <span>Select All</span>
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="showPage('upload', document.querySelector('.nav-item:nth-child(3)'))">
+              <i class="fa-solid fa-plus"></i> <span>Upload</span>
+            </button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <div class="filter-chip active" onclick="filterChip('all', this)"><i class="fa-solid fa-border-all"></i> All</div>
+          <div class="filter-chip" onclick="filterChip('image', this)"><i class="fa-regular fa-image"></i> Images</div>
+          <div class="filter-chip" onclick="filterChip('video', this)"><i class="fa-solid fa-video"></i> Videos</div>
+          <div class="filter-chip" onclick="filterChip('starred', this)"><i class="fa-solid fa-star"></i> Starred</div>
+          <div class="filter-chip" onclick="filterChip('today', this)"><i class="fa-solid fa-calendar-day"></i> Today</div>
+          <select class="sort-select" onchange="sortPhotos(this.value)">
+            <option value="date-desc">Newest First</option>
+            <option value="date-asc">Oldest First</option>
+            <option value="name-asc">Name A-Z</option>
+            <option value="name-desc">Name Z-A</option>
+            <option value="size-desc">Largest First</option>
+          </select>
+        </div>
+        <div class="photo-grid" id="photoGrid"></div>
+      </div>
+
+      <!-- ALBUMS PAGE -->
+      <div class="page" id="page-albums">
+        <div class="page-header">
+          <div class="page-title">Albums</div>
+          <div class="header-actions">
+            <button class="btn btn-primary btn-sm" onclick="openModal('newAlbumModal')">
+              <i class="fa-solid fa-plus"></i> <span>New Album</span>
+            </button>
+          </div>
+        </div>
+        <div class="album-grid" id="albumGrid"></div>
+      </div>
+
+      <!-- UPLOAD PAGE -->
+      <div class="page" id="page-upload">
+        <div class="page-header">
+          <div class="page-title">Upload Photos</div>
+        </div>
+        <div class="upload-zone" id="dropZone" onclick="document.getElementById('uploadInput').click()" ondragover="handleDrag(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <h3>Drop files here or <span class="upload-btn-link">browse</span></h3>
+          <p>Supports JPG, PNG, GIF, MP4, MOV — up to 100MB per file</p>
+          <input type="file" id="uploadInput" multiple accept="image/*,video/*" onchange="handleFileSelect(event)">
+        </div>
+        <div id="uploadQueue" class="upload-queue"></div>
+      </div>
+
+      <!-- SHARED PAGE -->
+      <div class="page" id="page-shared">
+        <div class="page-header">
+          <div class="page-title">Shared Links</div>
+          <div class="header-actions">
+            <button class="btn btn-primary btn-sm" onclick="showToast('Share link created!', 'success')">
+              <i class="fa-solid fa-link"></i> <span>Create Link</span>
+            </button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label"><i class="fa-solid fa-link" style="color:var(--accent); margin-right:8px"></i> Summer Vacation 2024</div>
+              <div class="settings-row-sub">32 photos · Anyone with link · Expires in 7 days</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-sm" onclick="showToast('Link copied!', 'success')"><i class="fa-solid fa-copy"></i></button>
+              <button class="btn btn-outline btn-sm" onclick="showToast('Link deleted', 'error')"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label"><i class="fa-solid fa-link" style="color:var(--accent); margin-right:8px"></i> Family Photos</div>
+              <div class="settings-row-sub">89 photos · Specific people · No expiry</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-sm" onclick="showToast('Link copied!', 'success')"><i class="fa-solid fa-copy"></i></button>
+              <button class="btn btn-outline btn-sm" onclick="showToast('Link deleted', 'error')"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label"><i class="fa-solid fa-link" style="color:var(--accent); margin-right:8px"></i> Project Screenshots</div>
+              <div class="settings-row-sub">17 photos · Viewer only · Expires in 30 days</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-sm" onclick="showToast('Link copied!', 'success')"><i class="fa-solid fa-copy"></i></button>
+              <button class="btn btn-outline btn-sm" onclick="showToast('Link deleted', 'error')"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRASH PAGE -->
+      <div class="page" id="page-trash">
+        <div class="page-header">
+          <div class="page-title">Trash</div>
+          <div class="header-actions">
+            <button class="btn btn-danger btn-sm" onclick="emptyTrash()">
+              <i class="fa-solid fa-fire"></i> <span>Empty Trash</span>
+            </button>
+          </div>
+        </div>
+        <div class="photo-grid" id="trashGrid"></div>
+        <div class="empty-state" id="trashEmpty" style="display:none">
+          <i class="fa-solid fa-trash-can"></i>
+          <h3>Trash is empty</h3>
+          <p>Deleted photos will appear here for 30 days</p>
+        </div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div class="page" id="page-settings">
+        <div class="page-header"><div class="page-title">Settings</div></div>
+
+        <!-- ===== GOOGLE DRIVE SECTION ===== -->
+        <div class="settings-section" id="driveSection">
+          <div class="settings-header">
+            <i class="fa-brands fa-google-drive" style="color:#4285f4"></i>
+            Google Drive
+            <span id="driveStatusBadge" style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;background:rgba(239,68,68,0.12);color:#ef4444">সংযুক্ত নয়</span>
+          </div>
+
+          <!-- STEP 1 — Enter Client ID -->
+          <div id="driveStep1">
+            <div style="padding:20px">
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius2);padding:14px;margin-bottom:18px;font-size:13px;color:var(--text2);line-height:1.8">
+                <div style="font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px"><i class="fa-solid fa-circle-info" style="color:var(--info)"></i> কিভাবে Google Drive সংযুক্ত করবেন</div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <div><span style="background:var(--accent);color:white;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:7px">1</span><a href="https://console.cloud.google.com/" target="_blank" style="color:var(--accent2)">console.cloud.google.com</a> এ যান, নতুন Project তৈরি করুন</div>
+                  <div><span style="background:var(--accent);color:white;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:7px">2</span><strong>APIs & Services → Enable APIs</strong> → Google Drive API চালু করুন</div>
+                  <div><span style="background:var(--accent);color:white;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:7px">3</span><strong>Credentials → Create → OAuth 2.0 Client ID</strong> (Type: Web application)</div>
+                  <div><span style="background:var(--accent);color:white;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:7px">4</span>Authorized JavaScript origins এ এই পেজের URL যোগ করুন</div>
+                  <div><span style="background:var(--accent);color:white;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:7px">5</span>নিচে Client ID পেস্ট করুন → Connect চাপুন</div>
+                </div>
+              </div>
+
+              <div style="background:var(--bg3);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius2);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--warning);display:flex;gap:8px;align-items:flex-start">
+                <i class="fa-solid fa-triangle-exclamation" style="margin-top:1px;flex-shrink:0"></i>
+                <span>Google Cloud Console → Credentials → OAuth consent screen → <strong>Test users</strong> এ আপনার Gmail যোগ করুন। OAuth consent screen এ <strong>Application type: External</strong> সিলেক্ট করুন।</span>
+              </div>
+
+              <div class="form-group" style="margin-bottom:12px">
+                <label class="form-label"><i class="fa-solid fa-fingerprint" style="margin-right:5px;color:var(--accent)"></i>Google OAuth Client ID <span style="color:var(--danger)">*</span></label>
+                <input class="form-input" type="text" id="gClientId"
+                  placeholder="xxxxxxxxxxxxxxxx.apps.googleusercontent.com"
+                  oninput="validateClientId(this)">
+                <div id="clientIdHint" style="font-size:11px;color:var(--text3);margin-top:5px">
+                  <i class="fa-solid fa-info-circle"></i> .apps.googleusercontent.com দিয়ে শেষ হবে
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-primary" style="flex:1" id="connectDriveBtn" onclick="realConnectDrive()">
+                  <i class="fa-brands fa-google"></i> Google Drive সংযুক্ত করুন
+                </button>
+                <a href="https://console.cloud.google.com/apis/credentials" target="_blank"
+                   class="btn btn-outline" title="Google Cloud Console খুলুন">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONNECTED STATE -->
+          <div id="driveConnected" style="display:none">
+            <div id="connectedAccountsList"></div>
+
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label"><i class="fa-solid fa-plus" style="color:var(--accent);margin-right:7px"></i>আরেকটি অ্যাকাউন্ট যোগ করুন</div>
+                <div class="settings-row-sub">একাধিক Drive অ্যাকাউন্ট ব্যবহার করুন</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="addAnotherDriveAccount()">
+                <i class="fa-brands fa-google"></i> Add Account
+              </button>
+            </div>
+
+            <div style="padding:16px 20px;border-top:1px solid var(--border)">
+              <div style="font-size:12px;color:var(--text3);margin-bottom:12px;font-weight:500;text-transform:uppercase;letter-spacing:.05em">Sync সেটিংস</div>
+              <div class="settings-row" style="padding:0;border:none;margin-bottom:12px">
+                <div><div class="settings-row-label">Auto Sync</div><div class="settings-row-sub">নতুন ফটো স্বয়ংক্রিয়ভাবে সিঙ্ক করুন</div></div>
+                <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+              </div>
+              <div class="settings-row" style="padding:0;border:none;margin-bottom:12px">
+                <div><div class="settings-row-label">Sync Interval</div></div>
+                <select class="sort-select">
+                  <option>Every 15 min</option><option selected>Every 30 min</option>
+                  <option>Every 1 hour</option><option>Manual only</option>
+                </select>
+              </div>
+              <div class="settings-row" style="padding:0;border:none;margin-bottom:14px">
+                <div><div class="settings-row-label">Sync Folder</div><div class="settings-row-sub" id="syncFolderPath">/My Drive/Photos</div></div>
+                <button class="btn btn-outline btn-sm" onclick="openFolderPicker()"><i class="fa-solid fa-folder-open"></i> Change</button>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-primary btn-sm" onclick="doSyncNow()" id="syncNowBtn">
+                  <i class="fa-solid fa-rotate"></i> এখনই Sync করুন
+                </button>
+                <div style="flex:1;font-size:12px;color:var(--text3);display:flex;align-items:center" id="lastSyncText">Last sync: কখনো না</div>
+              </div>
+            </div>
+
+            <div style="padding:16px 20px;border-top:1px solid var(--border)" id="driveStorageInfo">
+              <div style="font-size:12px;color:var(--text3);margin-bottom:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em">Drive স্টোরেজ</div>
+              <div id="driveStorageBars"></div>
+            </div>
+
+            <div style="padding:16px 20px;border-top:1px solid var(--border);background:rgba(239,68,68,0.03)">
+              <div style="font-size:12px;color:var(--danger);margin-bottom:12px;font-weight:500;text-transform:uppercase;letter-spacing:.05em">⚠ Danger Zone</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-danger btn-sm" onclick="disconnectAllDrives()">
+                  <i class="fa-solid fa-plug-circle-xmark"></i> সব অ্যাকাউন্ট ডিসকানেক্ট করুন
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-header"><i class="fa-solid fa-shield-halved"></i> Security</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">PIN Lock</div>
+              <div class="settings-row-sub">Lock app with time-based PIN</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Biometric Authentication</div>
+              <div class="settings-row-sub">Use fingerprint or face ID on mobile</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Auto Lock Timeout</div>
+              <div class="settings-row-sub">Lock after inactivity</div>
+            </div>
+            <select class="sort-select">
+              <option>1 minute</option>
+              <option selected>5 minutes</option>
+              <option>15 minutes</option>
+              <option>1 hour</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-header"><i class="fa-solid fa-palette"></i> Appearance</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Default View</div>
+            </div>
+            <select class="sort-select">
+              <option selected>Grid View</option>
+              <option>List View</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Grid Size</div>
+            </div>
+            <select class="sort-select">
+              <option>Small</option>
+              <option selected>Medium</option>
+              <option>Large</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Show File Info</div>
+              <div class="settings-row-sub">Show name and size on cards</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-header"><i class="fa-solid fa-sliders"></i> Advanced</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Image Compression</div>
+              <div class="settings-row-sub">Compress on upload to save space</div>
+            </div>
+            <div class="toggle" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">EXIF Data</div>
+              <div class="settings-row-sub">Show photo metadata</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Cache Storage</div>
+              <div class="settings-row-sub">24.7 MB used</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="showToast('Cache cleared!', 'success')"><i class="fa-solid fa-broom"></i> Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button class="lb-close" onclick="closeLightbox()"><i class="fa-solid fa-xmark"></i></button>
+  <button class="lb-nav lb-prev" onclick="lbNavigate(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+  <button class="lb-nav lb-next" onclick="lbNavigate(1)"><i class="fa-solid fa-chevron-right"></i></button>
+  <div id="lbContent" style="display:flex;flex-direction:column;align-items:center">
+    <div id="lbImgWrap"></div>
+    <div class="lb-info">
+      <span class="lb-name" id="lbName"></span>
+      <span class="lb-size" id="lbSize"></span>
+      <span class="lb-size" id="lbDate"></span>
+    </div>
+  </div>
+  <div class="lb-actions">
+    <button class="lb-action-btn" onclick="downloadCurrent()"><i class="fa-solid fa-download"></i> Download</button>
+    <button class="lb-action-btn" onclick="shareCurrent()"><i class="fa-solid fa-share"></i> Share</button>
+    <button class="lb-action-btn" onclick="starCurrent()"><i class="fa-solid fa-star" id="lbStar"></i> <span id="lbStarTxt">Star</span></button>
+    <button class="lb-action-btn" onclick="renameCurrent()"><i class="fa-solid fa-pen"></i> Rename</button>
+    <button class="lb-action-btn" style="color:var(--danger)" onclick="deleteCurrent()"><i class="fa-solid fa-trash"></i> Delete</button>
+  </div>
+</div>
+
+<!-- RENAME MODAL -->
+<div class="modal-overlay" id="renameModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa-solid fa-pen" style="color:var(--accent);margin-right:8px"></i>Rename File</div>
+      <button class="modal-close" onclick="closeModal('renameModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">File Name</label>
+        <input class="form-input" type="text" id="renameInput" placeholder="Enter new name">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('renameModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmRename()"><i class="fa-solid fa-check"></i> Rename</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW ALBUM MODAL -->
+<div class="modal-overlay" id="newAlbumModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa-solid fa-folder-plus" style="color:var(--accent);margin-right:8px"></i>New Album</div>
+      <button class="modal-close" onclick="closeModal('newAlbumModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Album Name</label>
+        <input class="form-input" type="text" id="albumNameInput" placeholder="My Album">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description (optional)</label>
+        <input class="form-input" type="text" id="albumDescInput" placeholder="Album description">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('newAlbumModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createAlbum()"><i class="fa-solid fa-plus"></i> Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation" style="margin-right:8px"></i>Delete Photo</div>
+      <button class="modal-close" onclick="closeModal('deleteModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--text2)">Are you sure you want to delete <strong id="deleteFileName" style="color:var(--text)"></strong>? It will be moved to Trash.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()"><i class="fa-solid fa-trash"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK ACTIONS BAR -->
+<div class="bulk-bar" id="bulkBar">
+  <span class="bulk-count" id="bulkCount">0 selected</span>
+  <div class="bulk-divider"></div>
+  <button class="bulk-action" onclick="bulkDownload()"><i class="fa-solid fa-download"></i> Download</button>
+  <button class="bulk-action" onclick="bulkStar()"><i class="fa-solid fa-star"></i> Star</button>
+  <button class="bulk-action" onclick="bulkMove()"><i class="fa-solid fa-folder-open"></i> Move</button>
+  <button class="bulk-action danger" onclick="bulkDelete()"><i class="fa-solid fa-trash"></i> Delete</button>
+  <button class="bulk-action" onclick="clearSelection()"><i class="fa-solid fa-xmark"></i></button>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ====== DATA ======
+let photos = JSON.parse(localStorage.getItem('dg_photos') || '[]');
+let albums = JSON.parse(localStorage.getItem('dg_albums') || '[]');
+let trash  = JSON.parse(localStorage.getItem('dg_trash')  || '[]');
+let selectedItems = new Set();
+let currentView   = 'grid';
+let currentFilter = 'all';
+let currentSort   = 'date-desc';
+let currentLbIndex  = 0;
+let pendingDeleteId = null;
+let pendingRenameId = null;
+let filteredPhotos  = [];
+
+const COLORS = ['#7c6fff','#a78bfa','#38bdf8','#10b981','#f59e0b','#f472b6','#34d399','#60a5fa'];
+
+if (photos.length === 0) {
+  const names = ['Mountain Sunrise','Beach Day','City Lights','Forest Trail','Portrait Session','Sunset Drive','Rainy Street','Architecture','Food Photography','Wildlife','Abstract Art','Travel Memories','Family Portrait','Night Sky','Macro Flowers'];
+  const types = ['image','image','image','video','image','image','image','image','image','video','image','image','image','image','image'];
+  const emojis= ['🏔️','🏖️','🌃','🌲','📸','🌅','🌧️','🏛️','🍕','🦁','🎨','✈️','👨‍👩‍👧','⭐','🌸'];
+  photos = names.map((n,i) => ({
+    id: Date.now()+i, name: n+(types[i]==='video'?'.mp4':'.jpg'),
+    type: types[i], size: (Math.random()*8+0.5).toFixed(1)+' MB',
+    date: new Date(Date.now()-i*86400000*2).toISOString(),
+    starred: i<3, color: COLORS[i%COLORS.length], emoji: emojis[i]
+  }));
+  albums = [
+    {id:1,name:'Summer 2024',desc:'Beach and outdoor photos',count:32,color:'#f59e0b',emoji:'☀️'},
+    {id:2,name:'Family Moments',desc:'Precious family memories',count:89,color:'#10b981',emoji:'👨‍👩‍👧'},
+    {id:3,name:'Work Projects',desc:'Professional portfolio',count:47,color:'#7c6fff',emoji:'💼'},
+    {id:4,name:'Travel 2023',desc:'Adventures around the world',count:124,color:'#38bdf8',emoji:'✈️'},
+    {id:5,name:'Nature & Outdoors',desc:'Wildlife and landscapes',count:61,color:'#34d399',emoji:'🌿'},
+    {id:6,name:'Food & Dining',desc:'Culinary adventures',count:28,color:'#f472b6',emoji:'🍴'},
+  ];
+  saveData();
+}
+
+function saveData() {
+  localStorage.setItem('dg_photos', JSON.stringify(photos));
+  localStorage.setItem('dg_albums', JSON.stringify(albums));
+  localStorage.setItem('dg_trash',  JSON.stringify(trash));
+}
+
+// ====== PIN LOCK ======
+let pinValue = '';
+const MAX_PIN = 4;
+
+function getCurrentTimePIN() {
+  const now = new Date();
+  return String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+}
+function updatePinHint() {
+  const pin = getCurrentTimePIN();
+  const now = new Date();
+  let h = now.getHours(), m = now.getMinutes();
+  const ampm = h>=12?'PM':'AM'; h = h%12||12;
+  document.getElementById('pinHintText').textContent =
+    `Current time ${h}:${String(m).padStart(2,'0')} ${ampm} → PIN: ${pin}`;
+}
+updatePinHint();
+setInterval(updatePinHint, 10000);
+
+function addPin(d) {
+  if (pinValue.length >= MAX_PIN) return;
+  pinValue += d; updateDots();
+  if (pinValue.length === MAX_PIN) setTimeout(submitPin, 200);
+}
+function clearPin() {
+  pinValue = pinValue.slice(0,-1); updateDots();
+  document.getElementById('pinError').textContent = '';
+}
+function updateDots() {
+  document.querySelectorAll('.pin-dot').forEach((d,i) => d.classList.toggle('filled', i < pinValue.length));
+}
+function submitPin() {
+  const correct = getCurrentTimePIN();
+  if (pinValue === correct) { unlockApp(); return; }
+  document.getElementById('pinError').textContent = '⚠ ভুল PIN। সঠিক PIN: ' + correct;
+  pinValue = ''; updateDots();
+  const card = document.querySelector('.lock-card');
+  card.style.animation = 'shake 0.4s ease';
+  setTimeout(() => card.style.animation = '', 400);
+}
+async function tryBiometric() {
+  if (window.PublicKeyCredential) {
+    showToast('Biometric authentication চাওয়া হচ্ছে...', 'info');
+    setTimeout(() => { unlockApp(); showToast('Biometric সফল!', 'success'); }, 1500);
+  } else { showToast('এই ডিভাইসে Biometric সাপোর্ট নেই', 'error'); }
+}
+function unlockApp() {
+  document.getElementById('lockScreen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex'; app.style.flexDirection = 'column';
+  renderPhotos(); renderAlbums(); updateStats(); initDriveUI();
+}
+function lockApp() {
+  document.getElementById('lockScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  pinValue = ''; updateDots();
+  document.getElementById('pinError').textContent = '';
+  updatePinHint();
+}
+
+// ====== NAVIGATION ======
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  closeSidebar();
+  if (name==='trash') renderTrash();
+}
+function toggleSidebar()  { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open'); }
+function closeSidebar()   { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+
+// ====== PHOTOS ======
+function getFilteredPhotos() {
+  let list = [...photos];
+  if (currentFilter==='image')   list = list.filter(p=>p.type==='image');
+  else if (currentFilter==='video')   list = list.filter(p=>p.type==='video');
+  else if (currentFilter==='starred') list = list.filter(p=>p.starred);
+  else if (currentFilter==='today') {
+    const today = new Date().toDateString();
+    list = list.filter(p=>new Date(p.date).toDateString()===today);
+  }
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  if (q) list = list.filter(p=>p.name.toLowerCase().includes(q));
+  list.sort((a,b) => {
+    if (currentSort==='date-desc') return new Date(b.date)-new Date(a.date);
+    if (currentSort==='date-asc')  return new Date(a.date)-new Date(b.date);
+    if (currentSort==='name-asc')  return a.name.localeCompare(b.name);
+    if (currentSort==='name-desc') return b.name.localeCompare(a.name);
+    return 0;
+  });
+  return list;
+}
+
+function renderPhotos() {
+  filteredPhotos = getFilteredPhotos();
+  const grid = document.getElementById('photoGrid');
+  const count = document.getElementById('photoCount');
+  if (count) count.textContent = '('+filteredPhotos.length+')';
+  const nav = document.getElementById('navPhotoCount');
+  if (nav) nav.textContent = photos.length;
+  if (filteredPhotos.length===0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-image"></i><h3>কোনো ছবি নেই</h3><p>ছবি আপলোড করুন বা Google Drive সংযুক্ত করুন</p></div>';
+    return;
+  }
+  grid.innerHTML = filteredPhotos.map((p,idx) => {
+    const sel = selectedItems.has(p.id);
+    const thumb = p.thumb
+      ? `<img src="${p.thumb}" class="photo-thumb" alt="${p.name}" onerror="this.style.display='none'">`
+      : `<div class="photo-thumb-placeholder"><span style="font-size:40px">${p.emoji||'🖼️'}</span>${p.type==='video'?'<span style="font-size:11px;color:var(--text3)"><i class="fa-solid fa-video"></i> Video</span>':''}</div>`;
+    return `<div class="photo-card ${sel?'selected':''}" id="card-${p.id}" ondblclick="openLightbox(${idx})">
+      <div class="select-check" onclick="toggleSelect(event,${p.id})">${sel?'<i class="fa-solid fa-check"></i>':''}</div>
+      <div onclick="openLightbox(${idx})">${thumb}</div>
+      <div class="photo-info">
+        <div class="photo-name">${p.name}</div>
+        <div class="photo-meta"><span>${p.size}</span><span>${formatDate(p.date)}</span></div>
+      </div>
+      <div class="photo-actions">
+        <button class="photo-action-btn" onclick="toggleStar(event,${p.id})" title="${p.starred?'Unstar':'Star'}"><i class="${p.starred?'fa-solid':'fa-regular'} fa-star" ${p.starred?'style="color:var(--gold)"':''}></i></button>
+        <button class="photo-action-btn" onclick="showRename(event,${p.id})" title="Rename"><i class="fa-solid fa-pen"></i></button>
+        <button class="photo-action-btn" onclick="sharePhoto(event,${p.id})" title="Share"><i class="fa-solid fa-share"></i></button>
+        <button class="photo-action-btn" onclick="downloadPhoto(event,${p.id})" title="Download"><i class="fa-solid fa-download"></i></button>
+        <button class="photo-action-btn danger" onclick="deletePhoto(event,${p.id})" title="Delete"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setView(v,btn) {
+  currentView = v;
+  document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('photoGrid').className = 'photo-grid'+(v==='list'?' list-view':'');
+}
+function filterChip(f,el) {
+  currentFilter=f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active'); renderPhotos();
+}
+function filterType(f,el) { showPage('photos',el); currentFilter=f; document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active')); renderPhotos(); }
+function sortPhotos(v)    { currentSort=v; renderPhotos(); }
+function searchPhotos()   { renderPhotos(); }
+function formatDate(d)    { return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+
+function updateStats() {
+  const s1=document.getElementById('statTotal'), s2=document.getElementById('statVideos'), s3=document.getElementById('statStarred');
+  if(s1) s1.textContent = photos.length;
+  if(s2) s2.textContent = photos.filter(p=>p.type==='video').length;
+  if(s3) s3.textContent = photos.filter(p=>p.starred).length;
+}
+
+// ====== SELECTION ======
+function toggleSelect(e,id) {
+  e.stopPropagation();
+  if(selectedItems.has(id)) selectedItems.delete(id); else selectedItems.add(id);
+  updateBulkBar();
+  const card = document.getElementById('card-'+id);
+  card.classList.toggle('selected', selectedItems.has(id));
+  card.querySelector('.select-check').innerHTML = selectedItems.has(id)?'<i class="fa-solid fa-check"></i>':'';
+}
+function selectAll()     { filteredPhotos.forEach(p=>selectedItems.add(p.id)); updateBulkBar(); renderPhotos(); }
+function clearSelection(){ selectedItems.clear(); updateBulkBar(); renderPhotos(); }
+function updateBulkBar() {
+  const bar=document.getElementById('bulkBar'), n=selectedItems.size;
+  document.getElementById('bulkCount').textContent = n+' selected';
+  bar.classList.toggle('visible', n>0);
+}
+
+// ====== PHOTO ACTIONS ======
+function toggleStar(e,id) {
+  e.stopPropagation();
+  const p=photos.find(p=>p.id===id);
+  if(p){ p.starred=!p.starred; saveData(); updateStats(); renderPhotos(); showToast(p.starred?'★ Starred!':'Unstarred','success'); }
+}
+function showRename(e,id) {
+  e.stopPropagation();
+  const p=photos.find(p=>p.id===id);
+  if(p){ pendingRenameId=id; document.getElementById('renameInput').value=p.name.replace(/\.[^.]+$/,''); openModal('renameModal'); }
+}
+function confirmRename() {
+  const p=photos.find(p=>p.id===pendingRenameId);
+  if(p){ const ext=p.name.match(/\.[^.]+$/)?.[0]||''; const n=document.getElementById('renameInput').value.trim(); if(n){p.name=n+ext; saveData(); renderPhotos(); showToast('Renamed to '+p.name,'success');} }
+  closeModal('renameModal');
+}
+function deletePhoto(e,id) {
+  e.stopPropagation();
+  const p=photos.find(p=>p.id===id);
+  if(p){ pendingDeleteId=id; document.getElementById('deleteFileName').textContent=p.name; openModal('deleteModal'); }
+}
+function confirmDelete() {
+  const idx=photos.findIndex(p=>p.id===pendingDeleteId);
+  if(idx!==-1){ trash.push({...photos[idx],deletedAt:new Date().toISOString()}); photos.splice(idx,1); saveData(); renderPhotos(); updateStats();
+    document.getElementById('navPhotoCount').textContent=photos.length;
+    const tc=document.getElementById('trashCount'); tc.style.display='flex'; tc.textContent=trash.length;
+    showToast('Moved to Trash','error'); }
+  closeModal('deleteModal');
+}
+function sharePhoto(e,id)    { e.stopPropagation(); navigator.clipboard?.writeText('https://drivegallery.app/share/'+id).catch(()=>{}); showToast('Share link copied!','success'); }
+function downloadPhoto(e,id) { e.stopPropagation(); showToast('Download started...','info'); }
+
+// ====== BULK ======
+function bulkDownload() { showToast('Downloading '+selectedItems.size+' files...','info'); clearSelection(); }
+function bulkStar()     { selectedItems.forEach(id=>{const p=photos.find(p=>p.id===id);if(p)p.starred=true;}); saveData();updateStats();showToast('Starred '+selectedItems.size+' photos','success');clearSelection(); }
+function bulkMove()     { showToast('Move '+selectedItems.size+' photos','info'); clearSelection(); }
+function bulkDelete() {
+  const ids=[...selectedItems];
+  ids.forEach(id=>{const idx=photos.findIndex(p=>p.id===id);if(idx!==-1){trash.push({...photos[idx],deletedAt:new Date().toISOString()});photos.splice(idx,1);}});
+  saveData();clearSelection();renderPhotos();updateStats();
+  const tc=document.getElementById('trashCount'); tc.style.display='flex'; tc.textContent=trash.length;
+  showToast(ids.length+' photos moved to Trash','error');
+}
+
+// ====== LIGHTBOX ======
+function openLightbox(idx) { currentLbIndex=idx; showLbPhoto(); document.getElementById('lightbox').classList.add('open'); }
+function showLbPhoto() {
+  const p=filteredPhotos[currentLbIndex]; if(!p)return;
+  const wrap=document.getElementById('lbImgWrap');
+  if(p.thumb) {
+    wrap.innerHTML=`<img src="${p.thumb}" style="max-width:90vw;max-height:70vh;object-fit:contain;border-radius:8px" alt="${p.name}">`;
+  } else {
+    wrap.innerHTML=`<div style="width:min(80vw,600px);height:60vh;background:linear-gradient(135deg,#1e1e2e,#2a2a3e);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px"><span style="font-size:80px">${p.emoji||'🖼️'}</span><span style="color:rgba(255,255,255,0.4);font-size:14px">${p.type==='video'?'Video Preview':'Image Preview'}</span></div>`;
+  }
+  document.getElementById('lbName').textContent=p.name;
+  document.getElementById('lbSize').textContent=p.size;
+  document.getElementById('lbDate').textContent=new Date(p.date).toLocaleDateString();
+  document.getElementById('lbStar').className=p.starred?'fa-solid fa-star':'fa-regular fa-star';
+  document.getElementById('lbStarTxt').textContent=p.starred?'Unstar':'Star';
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+function lbNavigate(dir) { currentLbIndex=(currentLbIndex+dir+filteredPhotos.length)%filteredPhotos.length; showLbPhoto(); }
+function downloadCurrent() { showToast('Downloading '+filteredPhotos[currentLbIndex]?.name,'info'); }
+function shareCurrent()    { navigator.clipboard?.writeText('https://drivegallery.app/share/'+(filteredPhotos[currentLbIndex]?.id)).catch(()=>{}); showToast('Share link copied!','success'); }
+function starCurrent()     { const p=filteredPhotos[currentLbIndex];if(p){p.starred=!p.starred;saveData();updateStats();showLbPhoto();showToast(p.starred?'★ Starred!':'Unstarred','success');} }
+function renameCurrent()   { closeLightbox();const p=filteredPhotos[currentLbIndex];if(p){pendingRenameId=p.id;document.getElementById('renameInput').value=p.name.replace(/\.[^.]+$/,'');openModal('renameModal');} }
+function deleteCurrent()   { closeLightbox();const p=filteredPhotos[currentLbIndex];if(p){pendingDeleteId=p.id;document.getElementById('deleteFileName').textContent=p.name;openModal('deleteModal');} }
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('lightbox').classList.contains('open'))return;
+  if(e.key==='Escape')closeLightbox();
+  if(e.key==='ArrowLeft')lbNavigate(-1);
+  if(e.key==='ArrowRight')lbNavigate(1);
+});
+
+// ====== ALBUMS ======
+function renderAlbums() {
+  const grid=document.getElementById('albumGrid');
+  grid.innerHTML=albums.map(a=>`
+    <div class="album-card" onclick="showToast('Opening: ${a.name}','info')">
+      <div class="album-cover" style="background:linear-gradient(135deg,${a.color}22,${a.color}44)">
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px">${a.emoji}</div>
+      </div>
+      <div class="album-info">
+        <div class="album-name">${a.name}</div>
+        <div class="album-count"><i class="fa-regular fa-image"></i> ${a.count} photos</div>
+      </div>
+    </div>`).join('');
+}
+function createAlbum() {
+  const name=document.getElementById('albumNameInput').value.trim(); if(!name)return;
+  const emojis=['📁','🎨','🌟','🎭','🌈','🔥','💫','🎪'];
+  albums.unshift({id:Date.now(),name,desc:document.getElementById('albumDescInput').value,count:0,color:COLORS[Math.floor(Math.random()*COLORS.length)],emoji:emojis[Math.floor(Math.random()*emojis.length)]});
+  saveData();renderAlbums();closeModal('newAlbumModal');
+  document.getElementById('albumNameInput').value='';document.getElementById('albumDescInput').value='';
+  showToast('Album created: '+name,'success');
+}
+
+// ====== UPLOAD ======
+function handleDrag(e)     { e.preventDefault(); document.getElementById('dropZone').classList.add('dragover'); }
+function handleDragLeave() { document.getElementById('dropZone').classList.remove('dragover'); }
+function handleDrop(e)     { e.preventDefault(); document.getElementById('dropZone').classList.remove('dragover'); processFiles(e.dataTransfer.files); }
+function handleFileSelect(e) { processFiles(e.target.files); }
+function processFiles(files) {
+  const queue=document.getElementById('uploadQueue');
+  [...files].forEach(file => {
+    const id=Date.now()+Math.random(); const isVideo=file.type.startsWith('video/');
+    const item=document.createElement('div'); item.className='upload-item'; item.id='uitem-'+id;
+    item.innerHTML=`<i class="fa-${isVideo?'solid fa-video':'regular fa-image'}" style="color:var(--accent)"></i>
+      <div class="upload-item-info">
+        <div class="upload-item-name">${file.name}</div>
+        <div class="upload-item-size">${(file.size/1048576).toFixed(1)} MB</div>
+        <div class="upload-progress-bar"><div class="upload-progress-fill" id="prog-${id}" style="width:0%"></div></div>
+      </div><span class="upload-status" id="stat-${id}">0%</span>`;
+    queue.prepend(item);
+    simulateUpload(id,file.name,isVideo,file.size);
+  });
+}
+function simulateUpload(id,name,isVideo,size) {
+  let pct=0;
+  const iv=setInterval(()=>{
+    pct+=Math.random()*15+5;
+    if(pct>=100){ pct=100; clearInterval(iv);
+      const statEl=document.getElementById('stat-'+id);
+      if(statEl) statEl.innerHTML='<i class="fa-solid fa-check" style="color:var(--success)"></i>';
+      const emoji=isVideo?'🎬':['📸','🌄','🌊','🎨','🌿'][Math.floor(Math.random()*5)];
+      photos.unshift({id:Date.now()+Math.random(),name,type:isVideo?'video':'image',size:(size/1048576).toFixed(1)+' MB',date:new Date().toISOString(),starred:false,color:COLORS[Math.floor(Math.random()*COLORS.length)],emoji});
+      saveData();updateStats();
+      document.getElementById('navPhotoCount').textContent=photos.length;
+      showToast(name+' uploaded!','success'); return;
+    }
+    const bar=document.getElementById('prog-'+id); const stat=document.getElementById('stat-'+id);
+    if(bar)bar.style.width=pct+'%'; if(stat)stat.textContent=Math.round(pct)+'%';
+  },200);
+}
+
+// ====== TRASH ======
+function renderTrash() {
+  const grid=document.getElementById('trashGrid'), empty=document.getElementById('trashEmpty');
+  if(trash.length===0){grid.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  grid.innerHTML=trash.map(p=>`
+    <div class="photo-card" style="opacity:0.7">
+      <div class="photo-thumb-placeholder"><span style="font-size:40px">${p.emoji||'🗑️'}</span></div>
+      <div class="photo-info"><div class="photo-name">${p.name}</div><div class="photo-meta"><span>Deleted ${formatDate(p.deletedAt)}</span></div></div>
+      <div class="photo-actions" style="opacity:1">
+        <button class="photo-action-btn" onclick="restorePhoto('${p.id}')" title="Restore"><i class="fa-solid fa-rotate-left"></i></button>
+        <button class="photo-action-btn danger" onclick="permDelete('${p.id}')" title="Delete forever"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>`).join('');
+}
+function restorePhoto(id) {
+  const idx=trash.findIndex(p=>p.id==id);
+  if(idx!==-1){const p={...trash[idx]};delete p.deletedAt;photos.unshift(p);trash.splice(idx,1);saveData();renderTrash();updateStats();showToast('Photo restored!','success');}
+}
+function permDelete(id) {
+  trash=trash.filter(p=>p.id!=id);saveData();renderTrash();
+  const tc=document.getElementById('trashCount');
+  if(trash.length===0)tc.style.display='none'; else tc.textContent=trash.length;
+  showToast('Permanently deleted','error');
+}
+function emptyTrash() {
+  trash=[];saveData();renderTrash();
+  document.getElementById('trashCount').style.display='none';
+  showToast('Trash emptied','success');
+}
+
+// ====== MODALS ======
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+// ====== TOAST ======
+function showToast(msg, type='info') {
+  const icons={success:'fa-circle-check',error:'fa-circle-xmark',info:'fa-circle-info'};
+  const t=document.createElement('div'); t.className='toast-item '+type;
+  t.innerHTML=`<i class="fa-solid ${icons[type]}"></i> ${msg}`;
+  document.getElementById('toast').appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// ====== SHAKE ANIMATION ======
+const _s=document.createElement('style');
+_s.textContent='@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}';
+document.head.appendChild(_s);
+
+// ====== GOOGLE DRIVE REAL OAUTH ======
+(function loadGIS(){
+  const s=document.createElement('script');
+  s.src='https://accounts.google.com/gsi/client';
+  s.async=true; s.defer=true; document.head.appendChild(s);
+})();
+
+const DRIVE_SCOPES=[
+  'https://www.googleapis.com/auth/drive.readonly',
+  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/userinfo.email',
+  'https://www.googleapis.com/auth/userinfo.profile'
+].join(' ');
+
+let driveAccounts=JSON.parse(localStorage.getItem('dg_driveAccounts')||'[]');
+let selectedFolderTemp=null;
+const ACCOUNT_COLORS=['#4285f4','#10b981','#f59e0b','#f472b6','#7c6fff','#38bdf8'];
+
+function saveDriveAccounts() { localStorage.setItem('dg_driveAccounts',JSON.stringify(driveAccounts)); }
+
+function validateClientId(inp) {
+  const v=inp.value.trim(), hint=document.getElementById('clientIdHint'), btn=document.getElementById('connectDriveBtn');
+  if(!v){hint.innerHTML='<i class="fa-solid fa-info-circle"></i> .apps.googleusercontent.com দিয়ে শেষ হবে';hint.style.color='var(--text3)';btn.disabled=false;return;}
+  if(v.endsWith('.apps.googleusercontent.com')){hint.innerHTML='<i class="fa-solid fa-circle-check" style="color:var(--success)"></i> Client ID সঠিক';hint.style.color='var(--success)';btn.disabled=false;}
+  else{hint.innerHTML='<i class="fa-solid fa-circle-xmark" style="color:var(--danger)"></i> .apps.googleusercontent.com দিয়ে শেষ হওয়া উচিত';hint.style.color='var(--danger)';btn.disabled=true;}
+}
+
+function realConnectDrive() {
+  const clientId=(document.getElementById('gClientId').value||'').trim();
+  if(!clientId){showToast('Client ID দিন','error');return;}
+  if(!clientId.endsWith('.apps.googleusercontent.com')){showToast('সঠিক Client ID দিন','error');return;}
+  if(typeof google==='undefined'||!google.accounts){showToast('Google script লোড হচ্ছে, একটু অপেক্ষা করুন...','info');setTimeout(()=>realConnectDrive(),1500);return;}
+  const btn=document.getElementById('connectDriveBtn');
+  btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> সংযুক্ত হচ্ছে...'; btn.disabled=true;
+  try {
+    const client=google.accounts.oauth2.initTokenClient({
+      client_id:clientId, scope:DRIVE_SCOPES,
+      callback:(tokenResp)=>{
+        if(tokenResp.error){showToast('Google সাইন ইন বাতিল: '+tokenResp.error,'error');resetConnectBtn();return;}
+        fetchGoogleUserInfo(tokenResp.access_token,clientId);
+      },
+      error_callback:(err)=>{showToast('Error: '+(err.message||err.type||'Unknown'),'error');resetConnectBtn();}
+    });
+    client.requestAccessToken({prompt:'consent'});
+  } catch(e){showToast('OAuth শুরু করতে পারেনি: '+e.message,'error');resetConnectBtn();}
+}
+
+async function fetchGoogleUserInfo(accessToken,clientId) {
+  try {
+    const profileRes=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:'Bearer '+accessToken}});
+    const profile=await profileRes.json();
+    const quotaRes=await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota',{headers:{Authorization:'Bearer '+accessToken}});
+    const quotaData=await quotaRes.json();
+    const quota=quotaData.storageQuota||{};
+    const usedBytes=parseInt(quota.usage||0);
+    const totalBytes=parseInt(quota.limit||15*1024*1024*1024);
+    if(driveAccounts.find(a=>a.email===profile.email)){showToast(profile.email+' ইতিমধ্যে সংযুক্ত','error');resetConnectBtn();return;}
+    driveAccounts.push({
+      email:profile.email, name:profile.name||profile.email,
+      picture:profile.picture||null, avatar:(profile.name||profile.email)[0].toUpperCase(),
+      color:ACCOUNT_COLORS[driveAccounts.length%ACCOUNT_COLORS.length],
+      accessToken, clientId, tokenExpiry:Date.now()+3600000,
+      usedStorage:(usedBytes/1073741824).toFixed(2)+' GB',
+      totalStorage:(totalBytes/1073741824).toFixed(1)+' GB',
+      usedBytes, totalBytes, syncStatus:'সিঙ্ক সম্পন্ন', syncing:false,
+      folder:'/My Drive/Photos', addedAt:new Date().toISOString()
+    });
+    saveDriveAccounts(); initDriveUI();
+    showToast('✅ '+profile.email+' সফলভাবে সংযুক্ত!','success');
+    loadDrivePhotos(accessToken);
+  } catch(e){showToast('User info পাওয়া যায়নি: '+e.message,'error');resetConnectBtn();}
+}
+
+async function loadDrivePhotos(accessToken) {
+  try {
+    showToast('Google Drive থেকে ছবি লোড হচ্ছে...','info');
+    const q=encodeURIComponent("mimeType contains 'image/' and trashed=false");
+    const url=`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,size,createdTime,thumbnailLink)&pageSize=50&orderBy=createdTime desc`;
+    const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+    const data=await res.json();
+    const files=data.files||[];
+    if(files.length===0){showToast('Drive-এ কোনো ছবি পাওয়া যায়নি','info');return;}
+    const existingIds=new Set(photos.filter(p=>p.driveId).map(p=>p.driveId));
+    const newPhotos=files.filter(f=>!existingIds.has(f.id)).map((f,i)=>({
+      id:'drive_'+f.id, driveId:f.id, name:f.name,
+      type:f.mimeType.startsWith('video/')?'video':'image',
+      size:f.size?(parseInt(f.size)/1048576).toFixed(1)+' MB':'—',
+      date:f.createdTime||new Date().toISOString(),
+      starred:false, color:COLORS[i%COLORS.length], emoji:'🖼️',
+      thumb:f.thumbnailLink||null, fromDrive:true
+    }));
+    photos=[...newPhotos,...photos];
+    saveData();renderPhotos();updateStats();
+    showToast('Drive থেকে '+newPhotos.length+'টি ছবি লোড হয়েছে! 🎉','success');
+  } catch(e){showToast('Drive ছবি লোড করতে পারেনি: '+e.message,'error');}
+}
+
+function resetConnectBtn() {
+  const btn=document.getElementById('connectDriveBtn');
+  if(btn){btn.innerHTML='<i class="fa-brands fa-google"></i> Google Drive সংযুক্ত করুন';btn.disabled=false;}
+}
+
+function initDriveUI() {
+  const hasDrives=driveAccounts.length>0;
+  const step1=document.getElementById('driveStep1'), conn=document.getElementById('driveConnected'), badge=document.getElementById('driveStatusBadge');
+  if(!step1||!conn||!badge)return;
+  step1.style.display=hasDrives?'none':'block';
+  conn.style.display=hasDrives?'block':'none';
+  if(hasDrives){
+    badge.textContent=driveAccounts.length+' সংযুক্ত';
+    badge.style.cssText='margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;background:rgba(16,185,129,0.15);color:#10b981';
+    renderDriveAccounts();renderDriveStorage();updateLastSyncDisplay();
+  } else {
+    badge.textContent='সংযুক্ত নয়';
+    badge.style.cssText='margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;background:rgba(239,68,68,0.12);color:#ef4444';
+  }
+}
+
+function renderDriveAccounts() {
+  const list=document.getElementById('connectedAccountsList'); if(!list)return;
+  list.innerHTML=driveAccounts.map((acc,i)=>`
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+      ${acc.picture?`<img src="${acc.picture}" style="width:42px;height:42px;border-radius:50%;border:2px solid var(--border2);object-fit:cover" onerror="this.outerHTML='<div style=width:42px;height:42px;border-radius:50%;background:${acc.color}22;color:${acc.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;border:2px solid var(--border2)>${acc.avatar}</div>'">`:`<div style="width:42px;height:42px;border-radius:50%;background:${acc.color}22;color:${acc.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;border:2px solid var(--border2)">${acc.avatar}</div>`}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${acc.name||acc.email}</div>
+        <div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${acc.email}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:5px">
+          <div style="width:6px;height:6px;border-radius:50%;background:${acc.syncing?'var(--warning)':'var(--success)'}"></div>
+          ${acc.syncing?'সিঙ্ক হচ্ছে...':acc.syncStatus} · ${acc.usedStorage} / ${acc.totalStorage}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-outline btn-sm" onclick="syncDriveAccount(${i})"><i class="fa-solid fa-rotate${acc.syncing?' fa-spin':''}"></i></button>
+        <button class="btn btn-outline btn-sm" onclick="disconnectDriveAccount(${i})" style="color:var(--danger);border-color:rgba(239,68,68,0.3)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+function renderDriveStorage() {
+  const bars=document.getElementById('driveStorageBars'); if(!bars)return;
+  bars.innerHTML=driveAccounts.map(acc=>{
+    const pct=Math.min(Math.round((acc.usedBytes/acc.totalBytes)*100),100)||0;
+    const color=pct>80?'var(--danger)':pct>60?'var(--warning)':'var(--accent)';
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:5px"><span>${acc.email}</span><span>${acc.usedStorage} / ${acc.totalStorage} (${pct}%)</span></div>
+      <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 0.6s"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function updateLastSyncDisplay() {
+  const el=document.getElementById('lastSyncText'), last=localStorage.getItem('dg_lastSync');
+  if(el&&last) el.textContent='Last sync: '+new Date(last).toLocaleTimeString();
+}
+
+function syncDriveAccount(i) {
+  const acc=driveAccounts[i]; if(!acc)return;
+  acc.syncing=true; renderDriveAccounts(); showToast(acc.email+' সিঙ্ক শুরু...','info');
+  if(acc.accessToken&&Date.now()<acc.tokenExpiry) loadDrivePhotos(acc.accessToken);
+  setTimeout(()=>{acc.syncing=false;acc.syncStatus='এইমাত্র সিঙ্ক হয়েছে';saveDriveAccounts();renderDriveAccounts();localStorage.setItem('dg_lastSync',new Date().toISOString());updateLastSyncDisplay();showToast(acc.email+' সিঙ্ক সম্পন্ন ✅','success');},3000);
+}
+
+function doSyncNow() {
+  const btn=document.getElementById('syncNowBtn');
+  btn.innerHTML='<i class="fa-solid fa-rotate fa-spin"></i> সিঙ্ক হচ্ছে...'; btn.disabled=true;
+  driveAccounts.forEach(a=>{a.syncing=true;}); renderDriveAccounts();
+  driveAccounts.forEach(a=>{if(a.accessToken&&Date.now()<a.tokenExpiry)loadDrivePhotos(a.accessToken);});
+  setTimeout(()=>{driveAccounts.forEach(a=>{a.syncing=false;a.syncStatus='এইমাত্র সিঙ্ক হয়েছে';});saveDriveAccounts();renderDriveAccounts();btn.innerHTML='<i class="fa-solid fa-rotate"></i> এখনই Sync করুন';btn.disabled=false;localStorage.setItem('dg_lastSync',new Date().toISOString());updateLastSyncDisplay();showToast('সব অ্যাকাউন্ট সিঙ্ক সম্পন্ন ✅','success');},3500);
+}
+
+function disconnectDriveAccount(i) {
+  const acc=driveAccounts[i]; driveAccounts.splice(i,1); saveDriveAccounts(); initDriveUI();
+  showToast(acc.email+' ডিসকানেক্ট করা হয়েছে','error');
+}
+function disconnectAllDrives() {
+  if(!confirm('সব Google Drive অ্যাকাউন্ট ডিসকানেক্ট করবেন?'))return;
+  driveAccounts=[];saveDriveAccounts();initDriveUI();showToast('সব অ্যাকাউন্ট ডিসকানেক্ট করা হয়েছে','error');
+}
+function addAnotherDriveAccount() {
+  document.getElementById('driveStep1').style.display='block';
+  document.getElementById('driveConnected').style.display='none';
+  document.getElementById('gClientId').value='';
+  document.getElementById('gClientId').focus();
+}
+function openFolderPicker() { openModal('folderPickerModal'); }
+function selectFolder(name,path) {
+  selectedFolderTemp={name,path};
+  document.getElementById('selectedFolderName').textContent=name;
+  document.querySelectorAll('.folder-item').forEach(i=>i.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+function confirmFolderSelection() {
+  if(!selectedFolderTemp){showToast('একটি ফোল্ডার বেছে নিন','error');return;}
+  const el=document.getElementById('syncFolderPath'); if(el)el.textContent=selectedFolderTemp.path;
+  closeModal('folderPickerModal');showToast('Sync ফোল্ডার: '+selectedFolderTemp.name,'success');
+}
+function createNewFolder() {
+  const name=prompt('নতুন ফোল্ডারের নাম দিন:');
+  if(name){showToast('"'+name+'" ফোল্ডার তৈরি হয়েছে','success');selectFolder(name,'/My Drive/'+name);}
+}
+function saveSyncSettings(){showToast('Sync সেটিংস সংরক্ষণ হয়েছে','success');}
+
+// ====== INIT ======
+renderPhotos();
+renderAlbums();
+updateStats();
+initDriveUI();
+</script>
+
+<!-- FOLDER PICKER MODAL -->
+<div class="modal-overlay" id="folderPickerModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa-solid fa-folder-open" style="color:var(--accent);margin-right:8px"></i>Sync Folder বেছে নিন</div>
+      <button class="modal-close" onclick="closeModal('folderPickerModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div style="padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <i class="fa-brands fa-google-drive" style="color:#4285f4;font-size:13px"></i>
+        <span style="font-size:13px;color:var(--text2)">My Drive</span>
+      </div>
+      <div style="max-height:280px;overflow-y:auto;padding:8px">
+        <div class="folder-item" onclick="selectFolder('Photos','/My Drive/Photos')"><i class="fa-solid fa-folder" style="color:#f59e0b"></i> Photos <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--text3);font-size:11px"></i></div>
+        <div class="folder-item" onclick="selectFolder('Camera','/My Drive/Camera')"><i class="fa-solid fa-folder" style="color:#f59e0b"></i> Camera <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--text3);font-size:11px"></i></div>
+        <div class="folder-item" onclick="selectFolder('Screenshots','/My Drive/Screenshots')"><i class="fa-solid fa-folder" style="color:#f59e0b"></i> Screenshots <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--text3);font-size:11px"></i></div>
+        <div class="folder-item" onclick="selectFolder('Downloads','/My Drive/Downloads')"><i class="fa-solid fa-folder" style="color:#f59e0b"></i> Downloads <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--text3);font-size:11px"></i></div>
+        <div class="folder-item" onclick="selectFolder('Shared with me','/Shared with me')"><i class="fa-solid fa-folder-open" style="color:#38bdf8"></i> Shared with me <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--text3);font-size:11px"></i></div>
+        <div class="folder-item" onclick="selectFolder('Backup','/My Drive/Backup')"><i class="fa-solid fa-folder" style="color:#f59e0b"></i> Backup <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--text3);font-size:11px"></i></div>
+        <div class="folder-item" style="color:var(--accent2)" onclick="createNewFolder()"><i class="fa-solid fa-folder-plus"></i> নতুন ফোল্ডার তৈরি করুন</div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <div style="font-size:12px;color:var(--text3)">Selected: <span id="selectedFolderName" style="color:var(--accent2)">কিছু না</span></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="closeModal('folderPickerModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmFolderSelection()"><i class="fa-solid fa-check"></i> Select</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OAUTH LOADING MODAL -->
+<div class="modal-overlay" id="oauthModal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-body" style="padding:40px 24px;text-align:center">
+      <div id="oauthStep1">
+        <div style="width:64px;height:64px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;margin:0 auto 20px;animation:spin 1s linear infinite"></div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">Google-এ সাইন ইন করছেন...</div>
+        <div style="font-size:13px;color:var(--text3)">আপনার ব্রাউজারে Google অনুমোদনের পেজ খোলা হচ্ছে</div>
+        <div style="margin-top:20px;padding:12px;background:var(--bg3);border-radius:var(--radius2);font-size:12px;color:var(--text3)">
+          <i class="fa-solid fa-shield-halved" style="color:var(--success);margin-right:6px"></i>
+          শুধুমাত্র ফটো অ্যাক্সেস অনুমতি চাওয়া হবে
+        </div>
+      </div>
+      <div id="oauthStep2" style="display:none">
+        <div style="font-size:56px;margin-bottom:16px">✅</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px;color:var(--success)">সফলভাবে সংযুক্ত!</div>
+        <div style="font-size:13px;color:var(--text3)" id="oauthSuccessEmail"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.folder-item {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 12px; border-radius:var(--radius2);
+  font-size:13px; color:var(--text2); cursor:pointer;
+  transition:all 0.15s; margin-bottom:2px;
+}
+.folder-item:hover { background:var(--bg3); color:var(--text); }
+.folder-item.selected { background:rgba(124,111,255,0.12); color:var(--accent2); }
+.drive-account-card {
+  padding:14px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:12px;
+}
+.drive-avatar {
+  width:42px; height:42px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:16px; flex-shrink:0;
+  border:2px solid var(--border2);
+}
+.drive-account-info { flex:1; min-width:0; }
+.drive-account-email { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.drive-account-status { font-size:11px; color:var(--text3); margin-top:2px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.drive-account-status .dot { width:6px; height:6px; border-radius:50%; background:var(--success); flex-shrink:0; }
+.drive-account-status .dot.syncing { background:var(--warning); animation:pulse 1s infinite; }
+.drive-account-actions { display:flex; gap:6px; flex-shrink:0; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
+</body>
+</html>

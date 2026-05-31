@@ -722,6 +722,84 @@
   /* VIRTUAL SCROLL SENTINEL */
   #scrollSentinel { height: 1px; }
 
+  /* ===== PAGINATION ===== */
+  .pagination-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; padding: 24px 0 8px;
+    flex-wrap: wrap;
+  }
+  .page-btn {
+    min-width: 36px; height: 36px; border-radius: var(--radius2);
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text2); font-size: 13px; font-weight: 500;
+    cursor: pointer; padding: 0 10px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .page-btn:hover { border-color: var(--accent); color: var(--accent2); background: rgba(124,111,255,0.08); }
+  .page-btn.active { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 0 12px rgba(124,111,255,0.35); }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .page-btn.ellipsis { cursor: default; background: none; border-color: transparent; }
+  .page-btn.ellipsis:hover { background: none; border-color: transparent; color: var(--text3); }
+  .pagination-info {
+    font-size: 12px; color: var(--text3); text-align: center;
+    padding: 0 0 16px;
+  }
+  .pagination-info strong { color: var(--text2); }
+
+  /* ===== FILE DETAILS MODAL ===== */
+  .file-detail-modal {
+    max-width: 580px !important;
+  }
+  .file-detail-hero {
+    background: linear-gradient(135deg, var(--bg3), var(--bg4));
+    min-height: 200px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--radius) var(--radius) 0 0;
+    overflow: hidden; position: relative;
+  }
+  .file-detail-hero img {
+    max-width: 100%; max-height: 260px;
+    object-fit: contain; border-radius: 0;
+  }
+  .file-detail-hero-placeholder {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 32px;
+  }
+  .file-detail-meta-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .file-meta-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .file-meta-item:nth-child(even) { border-right: none; }
+  .file-meta-item:nth-last-child(-n+2) { border-bottom: none; }
+  .file-meta-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    color: var(--text3); text-transform: uppercase; margin-bottom: 4px;
+  }
+  .file-meta-value {
+    font-size: 13px; color: var(--text); word-break: break-all;
+  }
+  .file-detail-actions {
+    display: flex; gap: 8px; flex-wrap: wrap; padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg3);
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  .file-type-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  }
+  .badge-image { background: rgba(56,189,248,0.15); color: var(--info); }
+  .badge-video { background: rgba(167,139,250,0.15); color: var(--accent2); }
+  .badge-drive { background: rgba(66,133,244,0.15); color: #4285f4; }
+
   /* SIDEBAR OVERLAY */
   .sidebar-overlay {
     display: none; position: fixed; inset: 0;
@@ -1012,12 +1090,15 @@
           <div class="filter-chip" onclick="filterChip('starred', this)"><i class="fa-solid fa-star"></i> Starred</div>
           <div class="filter-chip" onclick="filterChip('today', this)"><i class="fa-solid fa-calendar-day"></i> Today</div>
           <select class="sort-select" onchange="sortPhotos(this.value)">
-            <option value="date-desc">Newest First</option>
-            <option value="date-asc">Oldest First</option>
-            <option value="name-asc">Name A-Z</option>
-            <option value="name-desc">Name Z-A</option>
-            <option value="size-desc">Largest First</option>
+            <option value="date-desc">নতুন আগে</option>
+            <option value="date-asc">পুরনো আগে</option>
+            <option value="name-asc">নাম A-Z</option>
+            <option value="name-desc">নাম Z-A</option>
+            <option value="size-desc">বড় আগে</option>
           </select>
+          <button class="btn btn-outline btn-sm" onclick="quickSyncDrive()" id="quickSyncBtn" title="Drive থেকে লোড করুন" style="margin-left:auto">
+            <i class="fa-brands fa-google-drive" style="color:#4285f4"></i> Drive Sync
+          </button>
         </div>
         <div class="photo-grid" id="photoGrid"></div>
       </div>
@@ -1323,6 +1404,7 @@
     <button class="lb-action-btn" onclick="downloadCurrent()"><i class="fa-solid fa-download"></i> Download</button>
     <button class="lb-action-btn" onclick="shareCurrent()"><i class="fa-solid fa-share"></i> Share</button>
     <button class="lb-action-btn" onclick="starCurrent()"><i class="fa-solid fa-star" id="lbStar"></i> <span id="lbStarTxt">Star</span></button>
+    <button class="lb-action-btn" onclick="detailsCurrent()" style="color:var(--accent2)"><i class="fa-solid fa-circle-info"></i> Details</button>
     <button class="lb-action-btn" onclick="renameCurrent()"><i class="fa-solid fa-pen"></i> Rename</button>
     <button class="lb-action-btn" style="color:var(--danger)" onclick="deleteCurrent()"><i class="fa-solid fa-trash"></i> Delete</button>
   </div>
@@ -1572,119 +1654,156 @@ function getFilteredPhotos() {
   return list;
 }
 
-// ====== VIRTUAL / LAZY RENDER ======
-const RENDER_PAGE_SIZE = 60; // how many cards per render batch
-let renderedCount = 0;
-let renderObserver = null;
+// ====== PAGINATION RENDER (50 per page) ======
+const PAGE_SIZE = 50;
+let currentPage = 1;
 
 function renderPhotos() {
   filteredPhotos = getFilteredPhotos();
   const grid = document.getElementById('photoGrid');
   const count = document.getElementById('photoCount');
+  const totalPages = Math.ceil(filteredPhotos.length / PAGE_SIZE);
+
   if (count) count.textContent = '(' + filteredPhotos.length + ')';
   const nav = document.getElementById('navPhotoCount');
   if (nav) nav.textContent = photos.length;
   const mnavC = document.getElementById('mnavCount');
   if (mnavC) mnavC.textContent = photos.length > 99 ? '99+' : photos.length || '';
 
+  // Clamp current page
+  if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
   if (filteredPhotos.length === 0) {
     grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-image"></i><h3>কোনো ছবি নেই</h3><p>ছবি আপলোড করুন বা Google Drive সংযুক্ত করুন</p></div>';
+    renderPagination(0, 0);
     return;
   }
 
-  // Reset and render first batch
-  renderedCount = 0;
+  const startIdx = (currentPage - 1) * PAGE_SIZE;
+  const endIdx   = Math.min(startIdx + PAGE_SIZE, filteredPhotos.length);
+  const pagePics = filteredPhotos.slice(startIdx, endIdx);
+
   grid.innerHTML = '';
-  renderBatch(grid, Math.min(RENDER_PAGE_SIZE, filteredPhotos.length));
-  setupInfiniteScroll(grid);
+  const fragment = document.createDocumentFragment();
+  pagePics.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.innerHTML = makePhotoCard(p, startIdx + i);
+    fragment.appendChild(div.firstChild);
+  });
+  grid.appendChild(fragment);
+
+  renderPagination(currentPage, totalPages);
+  renderPageInfo(startIdx + 1, endIdx, filteredPhotos.length);
+
+  // Scroll to top of grid
+  grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderPagination(page, totalPages) {
+  // Remove old pagination
+  ['paginationBar','paginationInfo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  });
+  if (totalPages <= 1) return;
+
+  const grid = document.getElementById('photoGrid');
+
+  // Info bar
+  const info = document.createElement('div');
+  info.id = 'paginationInfo';
+  info.className = 'pagination-info';
+
+  // Pagination bar
+  const bar = document.createElement('div');
+  bar.id = 'paginationBar';
+  bar.className = 'pagination-bar';
+
+  // Prev button
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'page-btn';
+  prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i> পূর্ববর্তী';
+  prevBtn.disabled = page <= 1;
+  prevBtn.onclick = () => { currentPage = page - 1; renderPhotos(); };
+  bar.appendChild(prevBtn);
+
+  // Page number buttons
+  const pageNums = getPageNumbers(page, totalPages);
+  pageNums.forEach(n => {
+    const btn = document.createElement('button');
+    if (n === '...') {
+      btn.className = 'page-btn ellipsis';
+      btn.textContent = '···';
+    } else {
+      btn.className = 'page-btn' + (n === page ? ' active' : '');
+      btn.textContent = n;
+      btn.onclick = () => { currentPage = n; renderPhotos(); };
+    }
+    bar.appendChild(btn);
+  });
+
+  // Next button
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'page-btn';
+  nextBtn.innerHTML = 'পরবর্তী <i class="fa-solid fa-chevron-right"></i>';
+  nextBtn.disabled = page >= totalPages;
+  nextBtn.onclick = () => { currentPage = page + 1; renderPhotos(); };
+  bar.appendChild(nextBtn);
+
+  grid.after(bar);
+  bar.after(info);
+}
+
+function renderPageInfo(from, to, total) {
+  const info = document.getElementById('paginationInfo');
+  if (info) info.innerHTML = `দেখাচ্ছে <strong>${from}–${to}</strong> / মোট <strong>${total}</strong>টি ফাইল`;
+}
+
+function getPageNumbers(current, total) {
+  if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+  const pages = [];
+  if (current <= 4) {
+    pages.push(1,2,3,4,5,'...',total);
+  } else if (current >= total - 3) {
+    pages.push(1,'...',total-4,total-3,total-2,total-1,total);
+  } else {
+    pages.push(1,'...',current-1,current,current+1,'...',total);
+  }
+  return pages;
 }
 
 function makePhotoCard(p, idx) {
-  const sel = selectedItems.has(p.id);
+  const sel = selectedItems.has(String(p.id));
+  const isVideo = p.type === 'video';
   const thumb = p.thumb
-    ? `<img src="${p.thumb}" class="photo-thumb" alt="${p.name}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
-    : `<div class="photo-thumb-placeholder"><span style="font-size:32px">${p.emoji || '🖼️'}</span>${p.type === 'video' ? '<span style="font-size:10px;color:var(--text3)"><i class="fa-solid fa-video"></i></span>' : ''}</div>`;
+    ? `<img src="${p.thumb}" class="photo-thumb" alt="${p.name}" loading="lazy" decoding="async" onerror="this.parentNode.innerHTML='<div class=\"photo-thumb-placeholder\"><span style=\"font-size:32px\">${p.emoji||'🖼️'}</span></div>'">`
+    : `<div class="photo-thumb-placeholder">
+        <span style="font-size:32px">${p.emoji || (isVideo ? '🎬' : '🖼️')}</span>
+        ${isVideo ? '<span style="font-size:10px;color:var(--text3)"><i class="fa-solid fa-video"></i> VIDEO</span>' : ''}
+       </div>`;
+  const ext = p.name.split('.').pop().toUpperCase();
   return `<div class="photo-card ${sel ? 'selected' : ''}" id="card-${p.id}" ondblclick="openLightbox(${idx})">
     <div class="select-check" onclick="toggleSelect(event,'${p.id}')">${sel ? '<i class="fa-solid fa-check"></i>' : ''}</div>
+    ${isVideo ? `<div style="position:absolute;top:8px;left:36px;z-index:2;background:rgba(0,0,0,0.7);color:var(--accent2);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.05em">▶ VIDEO</div>` : ''}
     <div onclick="openLightbox(${idx})">${thumb}</div>
     <div class="photo-info">
-      <div class="photo-name">${p.name}</div>
-      <div class="photo-meta"><span>${p.size}</span><span>${formatDate(p.date)}</span></div>
+      <div class="photo-name" title="${p.name}">${p.name}</div>
+      <div class="photo-meta">
+        <span style="display:flex;align-items:center;gap:4px">
+          <span style="background:var(--bg4);padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600">${ext}</span>
+          ${p.size}
+        </span>
+        <span>${formatDate(p.date)}</span>
+      </div>
     </div>
     <div class="photo-actions">
       <button class="photo-action-btn" onclick="toggleStar(event,'${p.id}')" title="${p.starred ? 'Unstar' : 'Star'}"><i class="${p.starred ? 'fa-solid' : 'fa-regular'} fa-star" ${p.starred ? 'style="color:var(--gold)"' : ''}></i></button>
-      <button class="photo-action-btn" onclick="showRename(event,'${p.id}')" title="Rename"><i class="fa-solid fa-pen"></i></button>
+      <button class="photo-action-btn" onclick="showFileDetails(event,'${p.id}')" title="Details" style="background:rgba(124,111,255,0.4)"><i class="fa-solid fa-circle-info"></i></button>
       <button class="photo-action-btn" onclick="sharePhoto(event,'${p.id}')" title="Share"><i class="fa-solid fa-share"></i></button>
       <button class="photo-action-btn" onclick="downloadPhoto(event,'${p.id}')" title="Download"><i class="fa-solid fa-download"></i></button>
       <button class="photo-action-btn danger" onclick="deletePhoto(event,'${p.id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
     </div>
   </div>`;
-}
-
-function renderBatch(grid, upTo) {
-  const fragment = document.createDocumentFragment();
-  const end = Math.min(upTo, filteredPhotos.length);
-  for (let i = renderedCount; i < end; i++) {
-    const div = document.createElement('div');
-    div.innerHTML = makePhotoCard(filteredPhotos[i], i);
-    fragment.appendChild(div.firstChild);
-  }
-  // Remove sentinel if exists
-  const oldSentinel = document.getElementById('scrollSentinel');
-  if (oldSentinel) oldSentinel.remove();
-
-  grid.appendChild(fragment);
-  renderedCount = end;
-
-  // Add sentinel for next batch
-  if (renderedCount < filteredPhotos.length) {
-    const sentinel = document.createElement('div');
-    sentinel.id = 'scrollSentinel';
-    sentinel.style.cssText = 'height:1px;grid-column:1/-1';
-    grid.appendChild(sentinel);
-    // Also show count
-    showLoadStatus(grid);
-  } else {
-    hideLoadStatus();
-  }
-}
-
-function showLoadStatus(grid) {
-  let el = document.getElementById('loadStatusBar');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'loadStatusBar';
-    el.className = 'load-progress';
-    el.style.cssText = 'grid-column:1/-1';
-    grid.after(el);
-  }
-  el.innerHTML = `<span style="color:var(--text3)">দেখাচ্ছে <strong style="color:var(--text2)">${renderedCount}</strong> / <strong style="color:var(--accent2)">${filteredPhotos.length}</strong></span>
-    <button id="loadMoreBtn" onclick="manualLoadMore()">আরো দেখুন</button>`;
-}
-function hideLoadStatus() {
-  const el = document.getElementById('loadStatusBar');
-  if (el) el.remove();
-}
-
-function manualLoadMore() {
-  const grid = document.getElementById('photoGrid');
-  renderBatch(grid, renderedCount + RENDER_PAGE_SIZE);
-}
-
-function setupInfiniteScroll(grid) {
-  if (renderObserver) renderObserver.disconnect();
-  renderObserver = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && renderedCount < filteredPhotos.length) {
-      renderBatch(grid, renderedCount + RENDER_PAGE_SIZE);
-    }
-  }, { rootMargin: '300px' });
-
-  const checkSentinel = () => {
-    const s = document.getElementById('scrollSentinel');
-    if (s) renderObserver.observe(s);
-    else if (renderedCount < filteredPhotos.length) setTimeout(checkSentinel, 100);
-  };
-  checkSentinel();
 }
 
 function setView(v,btn) {
@@ -1694,13 +1813,13 @@ function setView(v,btn) {
   document.getElementById('photoGrid').className = 'photo-grid'+(v==='list'?' list-view':'');
 }
 function filterChip(f,el) {
-  currentFilter=f;
+  currentFilter=f; currentPage=1;
   document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active'); renderPhotos();
 }
-function filterType(f,el) { showPage('photos',el); currentFilter=f; document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active')); renderPhotos(); }
-function sortPhotos(v)    { currentSort=v; renderPhotos(); }
-function searchPhotos()   { renderPhotos(); }
+function filterType(f,el) { showPage('photos',el); currentFilter=f; currentPage=1; document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active')); renderPhotos(); }
+function sortPhotos(v)    { currentSort=v; currentPage=1; renderPhotos(); }
+function searchPhotos()   { currentPage=1; renderPhotos(); }
 function formatDate(d)    { return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
 
 function updateStats() {
@@ -1798,6 +1917,92 @@ function downloadCurrent() { showToast('Downloading '+filteredPhotos[currentLbIn
 function shareCurrent()    { navigator.clipboard?.writeText('https://drivegallery.app/share/'+(filteredPhotos[currentLbIndex]?.id)).catch(()=>{}); showToast('Share link copied!','success'); }
 function starCurrent()     { const p=filteredPhotos[currentLbIndex];if(p){p.starred=!p.starred;saveData();updateStats();showLbPhoto();showToast(p.starred?'★ Starred!':'Unstarred','success');} }
 function renameCurrent()   { closeLightbox();const p=filteredPhotos[currentLbIndex];if(p){pendingRenameId=String(p.id);document.getElementById('renameInput').value=p.name.replace(/\.[^.]+$/,'');openModal('renameModal');} }
+
+// ====== FILE DETAILS ======
+function showFileDetails(e, id) {
+  if(e) e.stopPropagation();
+  const sid = String(id);
+  const p = photos.find(p => String(p.id) === sid);
+  if (!p) return;
+
+  const ext = p.name.split('.').pop().toUpperCase();
+  const isVideo = p.type === 'video';
+  const fromDrive = !!p.fromDrive;
+  const dateStr = new Date(p.date).toLocaleString('bn-BD', {dateStyle:'long', timeStyle:'short'});
+
+  const hero = p.thumb
+    ? `<img src="${p.thumb}" style="max-width:100%;max-height:240px;object-fit:contain">`
+    : `<div class="file-detail-hero-placeholder">
+        <span style="font-size:72px">${p.emoji || (isVideo ? '🎬' : '🖼️')}</span>
+        <span style="font-size:13px;color:var(--text3)">${isVideo ? 'ভিডিও ফাইল' : 'ছবি ফাইল'}</span>
+       </div>`;
+
+  const badges = `
+    <span class="file-type-badge ${isVideo ? 'badge-video' : 'badge-image'}">
+      <i class="fa-solid fa-${isVideo ? 'video' : 'image'}"></i> ${isVideo ? 'VIDEO' : 'IMAGE'}
+    </span>
+    ${fromDrive ? '<span class="file-type-badge badge-drive"><i class="fa-brands fa-google-drive"></i> Google Drive</span>' : ''}
+    ${p.starred ? '<span class="file-type-badge" style="background:rgba(245,158,11,0.15);color:var(--gold)"><i class="fa-solid fa-star"></i> Starred</span>' : ''}
+  `;
+
+  const resolution = (p.width && p.height) ? `${p.width} × ${p.height} px` : '—';
+  const duration = p.duration ? `${Math.floor(p.duration/60000)}m ${Math.round((p.duration%60000)/1000)}s` : '—';
+  const modDate = p.modifiedDate ? new Date(p.modifiedDate).toLocaleDateString('bn-BD') : '—';
+  const meta = [
+    {label:'ফাইলের নাম', value: p.name},
+    {label:'ফাইল টাইপ', value: (p.mimeType || ext) + (isVideo ? ' · ভিডিও' : ' · ছবি')},
+    {label:'ফাইল সাইজ', value: p.size || '—'},
+    {label:'রেজোলিউশন', value: isVideo ? duration : resolution},
+    {label:'তৈরির তারিখ', value: dateStr},
+    {label:'পরিবর্তনের তারিখ', value: modDate},
+    {label:'উৎস', value: fromDrive ? 'Google Drive' : 'Local Upload'},
+    {label:'Drive ID', value: p.driveId ? p.driveId.substring(0,22)+'...' : '—'},
+  ];
+
+  document.getElementById('fileDetailContent').innerHTML = `
+    <div class="file-detail-hero">${hero}</div>
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      ${badges}
+      <span style="margin-left:auto;font-size:12px;color:var(--text3)">#${photos.indexOf(p)+1} / ${photos.length}</span>
+    </div>
+    <div class="file-detail-meta-grid">
+      ${meta.map(m=>`<div class="file-meta-item"><div class="file-meta-label">${m.label}</div><div class="file-meta-value">${m.value}</div></div>`).join('')}
+    </div>
+  `;
+
+  // Set action buttons
+  document.getElementById('fdStarBtn').innerHTML = p.starred
+    ? '<i class="fa-solid fa-star" style="color:var(--gold)"></i> Unstar'
+    : '<i class="fa-regular fa-star"></i> Star';
+  document.getElementById('fdStarBtn').onclick = () => {
+    toggleStar({stopPropagation:()=>{}}, id);
+    closeModal('fileDetailModal');
+  };
+  document.getElementById('fdRenameBtn').onclick = () => {
+    closeModal('fileDetailModal');
+    pendingRenameId = sid;
+    document.getElementById('renameInput').value = p.name.replace(/\.[^.]+$/, '');
+    openModal('renameModal');
+  };
+  document.getElementById('fdDeleteBtn').onclick = () => {
+    closeModal('fileDetailModal');
+    pendingDeleteId = sid;
+    document.getElementById('deleteFileName').textContent = p.name;
+    openModal('deleteModal');
+  };
+  document.getElementById('fdDownloadBtn').onclick = () => { downloadPhoto({stopPropagation:()=>{}}, id); };
+  const driveBtn = document.getElementById('fdDriveBtn');
+  if (p.webViewLink) {
+    driveBtn.style.display = '';
+    driveBtn.onclick = () => window.open(p.webViewLink, '_blank');
+  } else {
+    driveBtn.style.display = 'none';
+  }
+
+  openModal('fileDetailModal');
+}
+
+function detailsCurrent()  { const p=filteredPhotos[currentLbIndex]; if(p){ closeLightbox(); showFileDetails(null, p.id); } }
 function deleteCurrent()   { closeLightbox();const p=filteredPhotos[currentLbIndex];if(p){pendingDeleteId=String(p.id);document.getElementById('deleteFileName').textContent=p.name;openModal('deleteModal');} }
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('lightbox').classList.contains('open'))return;
@@ -2004,12 +2209,13 @@ async function loadDrivePhotos(accessToken, onlyNew=false) {
   showToast('Google Drive থেকে সব ছবি লোড হচ্ছে...','info');
 
   const q = encodeURIComponent("(mimeType contains 'image/' or mimeType contains 'video/') and trashed=false");
+  const allFileTypes = ['image/jpeg','image/png','image/gif','image/webp','image/heic','image/heif','image/bmp','image/tiff','video/mp4','video/quicktime','video/x-msvideo','video/x-matroska','video/webm','video/mpeg'];
 
   try {
     do {
       if (driveLoadAbort) { showToast('লোড বন্ধ করা হয়েছে','info'); break; }
 
-      let url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,size,createdTime,thumbnailLink,imageMediaMetadata)&pageSize=100&orderBy=createdTime%20desc`;
+      let url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,size,createdTime,modifiedTime,thumbnailLink,imageMediaMetadata,videoMediaMetadata,parents,webViewLink)&pageSize=100&orderBy=createdTime%20desc`;
       if (pageToken) url += '&pageToken=' + encodeURIComponent(pageToken);
 
       const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
@@ -2024,14 +2230,25 @@ async function loadDrivePhotos(accessToken, onlyNew=false) {
         .filter(f => !existingIds.has(f.id))
         .map((f, i) => {
           existingIds.add(f.id);
+          const isVid = f.mimeType.startsWith('video/');
+          const sizeBytes = parseInt(f.size||0);
+          const sizeMB = sizeBytes > 0 ? (sizeBytes/1048576).toFixed(1)+' MB' : '—';
+          // Higher res thumbnail
+          const thumb = f.thumbnailLink ? f.thumbnailLink.replace('=s220','=s400') : null;
           return {
             id: 'drive_' + f.id, driveId: f.id, name: f.name,
-            type: f.mimeType.startsWith('video/') ? 'video' : 'image',
-            size: f.size ? (parseInt(f.size)/1048576).toFixed(1) + ' MB' : '—',
+            type: isVid ? 'video' : 'image',
+            mimeType: f.mimeType,
+            size: sizeMB, sizeBytes,
             date: f.createdTime || new Date().toISOString(),
+            modifiedDate: f.modifiedTime || null,
+            webViewLink: f.webViewLink || null,
+            width: f.imageMediaMetadata?.width || f.videoMediaMetadata?.width || null,
+            height: f.imageMediaMetadata?.height || f.videoMediaMetadata?.height || null,
+            duration: f.videoMediaMetadata?.durationMillis || null,
             starred: false, color: COLORS[(totalLoaded+i) % COLORS.length],
-            emoji: f.mimeType.startsWith('video/') ? '🎬' : '🖼️',
-            thumb: f.thumbnailLink || null, fromDrive: true
+            emoji: isVid ? '🎬' : '🖼️',
+            thumb, fromDrive: true
           };
         });
 
@@ -2147,6 +2364,20 @@ function doSyncNow() {
   driveAccounts.forEach(a=>{a.syncing=true;}); renderDriveAccounts();
   driveAccounts.forEach(a=>{if(a.accessToken&&Date.now()<a.tokenExpiry)loadDrivePhotos(a.accessToken);});
   setTimeout(()=>{driveAccounts.forEach(a=>{a.syncing=false;a.syncStatus='এইমাত্র সিঙ্ক হয়েছে';});saveDriveAccounts();renderDriveAccounts();btn.innerHTML='<i class="fa-solid fa-rotate"></i> এখনই Sync করুন';btn.disabled=false;localStorage.setItem('dg_lastSync',new Date().toISOString());updateLastSyncDisplay();showToast('সব অ্যাকাউন্ট সিঙ্ক সম্পন্ন ✅','success');},3500);
+}
+
+function quickSyncDrive() {
+  if (driveAccounts.length === 0) {
+    showToast('প্রথমে Settings থেকে Google Drive সংযুক্ত করুন', 'error');
+    showPage('settings', document.querySelector('.nav-item:nth-child(7)'));
+    return;
+  }
+  const btn = document.getElementById('quickSyncBtn');
+  if (btn) { btn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> Syncing...'; btn.disabled = true; }
+  driveAccounts.forEach(a => { if (a.accessToken && Date.now() < a.tokenExpiry) loadDrivePhotos(a.accessToken); });
+  setTimeout(() => {
+    if (btn) { btn.innerHTML = '<i class="fa-brands fa-google-drive" style="color:#4285f4"></i> Drive Sync'; btn.disabled = false; }
+  }, 4000);
 }
 
 function disconnectDriveAccount(i) {
@@ -2270,5 +2501,24 @@ initDriveUI();
 .drive-account-actions { display:flex; gap:6px; flex-shrink:0; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 </style>
+
+<!-- FILE DETAIL MODAL -->
+<div class="modal-overlay" id="fileDetailModal">
+  <div class="modal file-detail-modal" style="max-width:560px;overflow:hidden">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa-solid fa-file-image" style="color:var(--accent);margin-right:8px"></i>ফাইলের বিস্তারিত</div>
+      <button class="modal-close" onclick="closeModal('fileDetailModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="fileDetailContent" style="overflow-y:auto;max-height:65vh"></div>
+    <div class="file-detail-actions">
+      <button class="btn btn-outline btn-sm" id="fdStarBtn"><i class="fa-regular fa-star"></i> Star</button>
+      <button class="btn btn-outline btn-sm" id="fdRenameBtn"><i class="fa-solid fa-pen"></i> Rename</button>
+      <button class="btn btn-outline btn-sm" id="fdDownloadBtn"><i class="fa-solid fa-download"></i> Download</button>
+      <button class="btn btn-outline btn-sm" id="fdDriveBtn" style="display:none"><i class="fa-brands fa-google-drive" style="color:#4285f4"></i> Drive-এ দেখুন</button>
+      <button class="btn btn-danger btn-sm" id="fdDeleteBtn" style="margin-left:auto"><i class="fa-solid fa-trash"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

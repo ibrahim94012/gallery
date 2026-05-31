@@ -887,11 +887,29 @@ body::before{
 
       <!-- ══ UPLOAD PAGE ══ -->
       <div class="page" id="page-upload">
-        <div class="page-header"><div class="page-title">Upload Media</div></div>
+        <div class="page-header">
+          <div class="page-title">Upload to Drive</div>
+          <div class="header-actions">
+            <div id="uploadDestBadge" style="font-size:12px;color:var(--t3);display:flex;align-items:center;gap:6px;background:var(--bg3);padding:6px 12px;border-radius:var(--r2);border:1px solid var(--border)">
+              <i class="fa-brands fa-google-drive" style="color:#4285f4"></i>
+              <span id="uploadDestText">My Drive (root)</span>
+              <span id="uploadFolderChange" style="color:var(--a3);cursor:pointer;text-decoration:underline" onclick="showFolderPicker()">পরিবর্তন</span>
+            </div>
+          </div>
+        </div>
+        <!-- Account selector for upload -->
+        <div id="uploadAccountRow" style="margin-bottom:14px;display:none">
+          <div style="font-size:12px;color:var(--t3);margin-bottom:8px;font-weight:600">কোন অ্যাকাউন্টে আপলোড করবেন?</div>
+          <div id="uploadAccountList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        </div>
+        <div id="noDriveUploadWarn" style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:var(--r2);padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--gold);display:flex;gap:10px;align-items:flex-start">
+          <i class="fa-solid fa-triangle-exclamation" style="margin-top:2px;flex-shrink:0"></i>
+          <span>Google Drive সংযুক্ত নেই। ফাইল শুধু এই ডিভাইসে সেভ হবে। <span style="color:var(--a3);cursor:pointer;text-decoration:underline" onclick="showPage('settings',null)">Drive যোগ করুন →</span></span>
+        </div>
         <div class="upload-zone" id="dropZone" onclick="document.getElementById('uploadInput').click()" ondragover="handleDrag(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
           <i class="fa-solid fa-cloud-arrow-up"></i>
           <h3>Drop files here or <span class="upload-link">browse</span></h3>
-          <p>JPG, PNG, GIF, WebP, HEIC, MP4, MOV — up to 2GB per file</p>
+          <p>JPG, PNG, GIF, WebP, HEIC, MP4, MOV — সরাসরি Google Drive-এ আপলোড হবে</p>
           <input type="file" id="uploadInput" multiple accept="image/*,video/*" onchange="handleFileSelect(event)">
         </div>
         <div id="uploadQueue" class="upload-queue"></div>
@@ -927,55 +945,42 @@ body::before{
         <!-- GOOGLE DRIVE -->
         <div class="settings-section" id="driveSection">
           <div class="settings-header">
-            <i class="fa-brands fa-google-drive" style="color:#4285f4"></i> Google Drive
+            <i class="fa-brands fa-google-drive" style="color:#4285f4"></i> Google Drive Accounts
             <span id="driveStatusBadge" style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(244,63,94,0.12);color:var(--red)">সংযুক্ত নয়</span>
           </div>
-          <div id="driveStep1">
-            <div style="padding:20px">
-              <div style="background:rgba(109,92,255,0.06);border:1px solid rgba(109,92,255,0.2);border-radius:var(--r2);padding:14px;margin-bottom:16px;font-size:13px;color:var(--t2);line-height:1.8">
-                <div style="font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px"><i class="fa-solid fa-circle-info" style="color:var(--cyan)"></i> কিভাবে Google Drive সংযুক্ত করবেন</div>
-                <div style="display:flex;flex-direction:column;gap:7px">
-                  <div><span style="background:var(--a1);color:#fff;border-radius:50%;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:8px">1</span><a href="https://console.cloud.google.com/" target="_blank" style="color:var(--a3)">console.cloud.google.com</a> এ যান, নতুন Project তৈরি করুন</div>
-                  <div><span style="background:var(--a1);color:#fff;border-radius:50%;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:8px">2</span><strong>APIs & Services → Enable APIs</strong> → Google Drive API চালু করুন</div>
-                  <div><span style="background:var(--a1);color:#fff;border-radius:50%;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:8px">3</span><strong>Credentials → OAuth 2.0 Client ID</strong> (Type: Web application) তৈরি করুন</div>
-                  <div><span style="background:var(--a1);color:#fff;border-radius:50%;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:8px">4</span>Authorized origins এ এই পেজের URL যোগ করুন</div>
-                  <div><span style="background:var(--a1);color:#fff;border-radius:50%;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:8px">5</span>নিচে Client ID পেস্ট করুন → Connect চাপুন</div>
-                </div>
-              </div>
-              <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:var(--r2);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--gold);display:flex;gap:8px">
-                <i class="fa-solid fa-triangle-exclamation" style="margin-top:1px;flex-shrink:0"></i>
-                <span>OAuth consent screen → Test users এ আপনার Gmail যোগ করুন।</span>
-              </div>
-              <div class="form-group" style="margin-bottom:12px">
-                <label class="form-label"><i class="fa-solid fa-key" style="margin-right:5px;color:var(--a2)"></i>Google OAuth Client ID</label>
-                <input class="form-input" type="text" id="gClientId" placeholder="xxxxxxxx.apps.googleusercontent.com" oninput="validateClientId(this)">
-                <div id="clientIdHint" style="font-size:11px;color:var(--t3);margin-top:5px"><i class="fa-solid fa-info-circle"></i> .apps.googleusercontent.com দিয়ে শেষ হবে</div>
-              </div>
-              <div style="display:flex;gap:8px">
-                <button class="btn btn-primary" style="flex:1" id="connectDriveBtn" onclick="realConnectDrive()"><i class="fa-brands fa-google"></i> Google Drive সংযুক্ত করুন</button>
-                <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="btn btn-outline" title="Console খুলুন"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-              </div>
+
+          <!-- ADD ACCOUNT BUTTON (always visible) -->
+          <div style="padding:18px 20px;border-bottom:1px solid var(--border)">
+            <button class="btn btn-primary" style="width:100%" onclick="showAddAccountModal()">
+              <i class="fa-brands fa-google"></i> Google অ্যাকাউন্ট যোগ করুন
+            </button>
+            <div style="font-size:11.5px;color:var(--t3);text-align:center;margin-top:10px;line-height:1.7">
+              <i class="fa-solid fa-shield-halved" style="color:var(--green);margin-right:4px"></i>
+              Popup-এ Google Account বেছে নিন। একাধিক অ্যাকাউন্ট যোগ করলে সব Drive একত্রিত হয়।
             </div>
           </div>
-          <div id="driveConnected" style="display:none">
-            <div id="connectedAccountsList"></div>
-            <div class="settings-row">
-              <div><div class="settings-row-label"><i class="fa-solid fa-plus" style="color:var(--a2);margin-right:7px"></i>আরেকটি অ্যাকাউন্ট</div><div class="settings-row-sub">Multiple Drive accounts</div></div>
-              <button class="btn btn-outline btn-sm" onclick="addAnotherDriveAccount()"><i class="fa-brands fa-google"></i> Add</button>
-            </div>
-            <div style="padding:16px 20px;border-top:1px solid var(--border)">
-              <div style="font-size:11px;color:var(--t3);margin-bottom:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Sync Settings</div>
-              <div class="settings-row" style="padding:0;border:none;margin-bottom:12px"><div><div class="settings-row-label">Auto Sync</div><div class="settings-row-sub">নতুন ফাইল স্বয়ংক্রিয়ভাবে সিঙ্ক</div></div><div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div></div>
-              <div style="display:flex;gap:8px;margin-top:6px">
+
+          <!-- CONNECTED ACCOUNTS -->
+          <div id="connectedAccountsList" style="display:none"></div>
+
+          <!-- SYNC CONTROLS (shown when connected) -->
+          <div id="syncControls" style="display:none">
+            <div style="padding:14px 20px;border-top:1px solid var(--border)">
+              <div style="font-size:11px;color:var(--t3);margin-bottom:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Sync Settings</div>
+              <div class="settings-row" style="padding:0;border:none;margin-bottom:12px">
+                <div><div class="settings-row-label">Auto Sync</div><div class="settings-row-sub">নতুন ফাইল স্বয়ংক্রিয়ভাবে সিঙ্ক</div></div>
+                <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+              </div>
+              <div style="display:flex;gap:8px">
                 <button class="btn btn-primary btn-sm" onclick="doSyncNow()" id="syncNowBtn"><i class="fa-solid fa-rotate"></i> এখনই Sync করুন</button>
                 <div style="flex:1;font-size:12px;color:var(--t3);display:flex;align-items:center" id="lastSyncText">Last sync: কখনো না</div>
               </div>
             </div>
-            <div style="padding:16px 20px;border-top:1px solid var(--border)">
+            <div style="padding:14px 20px;border-top:1px solid var(--border)">
               <div style="font-size:11px;color:var(--t3);margin-bottom:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Drive Storage</div>
               <div id="driveStorageBars"></div>
             </div>
-            <div style="padding:14px 20px;border-top:1px solid var(--border);background:rgba(244,63,94,0.03)">
+            <div style="padding:12px 20px;border-top:1px solid var(--border);background:rgba(244,63,94,0.03)">
               <button class="btn btn-danger btn-sm" onclick="disconnectAllDrives()"><i class="fa-solid fa-plug-circle-xmark"></i> সব ডিসকানেক্ট করুন</button>
             </div>
           </div>
@@ -1053,9 +1058,75 @@ body::before{
 <!-- OAuth Loading -->
 <div class="modal-overlay" id="oauthModal">
   <div class="modal" style="max-width:340px"><div class="modal-body" style="padding:40px 24px;text-align:center">
-    <div id="oauthStep1"><div style="width:60px;height:60px;border:3px solid var(--border2);border-top-color:var(--a1);border-radius:50%;margin:0 auto 20px;animation:spin 1s linear infinite"></div><div style="font-size:15px;font-weight:700;margin-bottom:8px">Google-এ সাইন ইন করছেন...</div><div style="font-size:13px;color:var(--t3)">ব্রাউজারে অনুমোদনের পেজ খোলা হচ্ছে</div></div>
+    <div id="oauthStep1"><div style="width:60px;height:60px;border:3px solid var(--border2);border-top-color:var(--a1);border-radius:50%;margin:0 auto 20px;animation:spin 1s linear infinite"></div><div style="font-size:15px;font-weight:700;margin-bottom:8px">Google-এ সাইন ইন করছেন...</div><div style="font-size:13px;color:var(--t3)">ব্রাউজারে Google Account Picker খোলা হচ্ছে</div></div>
     <div id="oauthStep2" style="display:none"><div style="font-size:56px;margin-bottom:16px">✅</div><div style="font-size:15px;font-weight:700;color:var(--green)">সফলভাবে সংযুক্ত!</div><div style="font-size:13px;color:var(--t3);margin-top:6px" id="oauthSuccessEmail"></div></div>
+    <div id="oauthStepError" style="display:none"><div style="font-size:48px;margin-bottom:16px">⚠️</div><div style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:8px">সংযোগ ব্যর্থ</div><div style="font-size:12px;color:var(--t3);margin-bottom:16px" id="oauthErrorMsg"></div><button class="btn btn-primary" style="width:100%" onclick="closeModal('oauthModal')">ঠিক আছে</button></div>
   </div></div>
+</div>
+
+<!-- Add Account Modal -->
+<div class="modal-overlay" id="addAccountModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa-brands fa-google-drive" style="color:#4285f4;margin-right:8px"></i>Google Account যোগ করুন</div>
+      <button class="modal-close" onclick="closeModal('addAccountModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <!-- Google Sign In Button area -->
+      <div style="margin-bottom:20px">
+        <div style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.2);border-radius:var(--r2);padding:16px;margin-bottom:16px">
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+            <div style="width:42px;height:42px;background:linear-gradient(135deg,#4285f4,#34a853);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🔐</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;margin-bottom:4px">OAuth 2.0 দিয়ে সংযুক্ত করুন</div>
+              <div style="font-size:11.5px;color:var(--t3);line-height:1.6">Client ID ছাড়া শুধু redirect URI দিয়ে Google sign-in করা যায় না। নিচে আপনার OAuth Client ID দিন — একবার দিলে মনে রাখা হবে।</div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:10px">
+            <label class="form-label">OAuth Client ID <span style="color:var(--t4);font-weight:400">(একবার দিন, সেভ হয়ে যাবে)</span></label>
+            <input class="form-input" type="text" id="modalClientId" placeholder="xxxxxxxx.apps.googleusercontent.com" oninput="checkSavedClientId()">
+            <div id="savedClientIdNote" style="font-size:11px;color:var(--green);margin-top:5px;display:none"><i class="fa-solid fa-circle-check"></i> Client ID সেভ আছে, সরাসরি Sign In করুন</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:14px;font-size:14px" onclick="connectNewAccount()">
+          <i class="fa-brands fa-google"></i> Google Account দিয়ে Sign In করুন
+        </button>
+        <div style="font-size:11px;color:var(--t3);text-align:center;margin-top:10px;line-height:1.7">
+          <i class="fa-solid fa-shield-halved" style="color:var(--green)"></i>
+          আপনার পাসওয়ার্ড এই অ্যাপ দেখে না। শুধু Drive Read/Write permission নেওয়া হয়।
+        </div>
+      </div>
+
+      <!-- Previously connected accounts (to re-add) -->
+      <div id="prevAccountsSection" style="display:none">
+        <div style="font-size:11px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">আগে সংযুক্ত ছিল</div>
+        <div id="prevAccountsList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Folder Picker Modal -->
+<div class="modal-overlay" id="folderPickerModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa-solid fa-folder-open" style="color:#fbbf24;margin-right:8px"></i>Upload ফোল্ডার বেছে নিন</div>
+      <button class="modal-close" onclick="closeModal('folderPickerModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <div style="font-size:12px;color:var(--t3)" id="fpBreadcrumb">📂 My Drive</div>
+        <button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="fpGoUp()"><i class="fa-solid fa-arrow-up"></i></button>
+      </div>
+      <div id="fpFolderList" style="max-height:320px;overflow-y:auto">
+        <div style="padding:30px;text-align:center;color:var(--t3)"><div class="fm-spinner" style="margin:0 auto 12px"></div>Loading...</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('folderPickerModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmFolderPick()"><i class="fa-solid fa-check"></i> এই ফোল্ডারে আপলোড করুন</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ BULK BAR ═══ -->
@@ -1084,42 +1155,54 @@ body::before{
 
 <!-- ═══ SCRIPTS ═══ -->
 <script>
-(function loadGIS(){const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;document.head.appendChild(s);})();
+(function loadGIS(){const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.defer=true;document.head.appendChild(s);})();
 
-// ══ DATA ══
+// ══ STATE ══
 let photos = JSON.parse(localStorage.getItem('dg_photos')||'[]');
 let albums = JSON.parse(localStorage.getItem('dg_albums')||'[]');
 let trash  = JSON.parse(localStorage.getItem('dg_trash') ||'[]');
-let selectedItems = new Set();
-let currentView   = 'grid';
-let currentFilter = 'all';
-let currentSort   = 'date-desc';
-let currentLbIndex  = 0;
-let pendingDeleteId = null;
-let pendingRenameId = null;
-let filteredPhotos  = [];
-let currentPage     = 1;
-const PAGE_SIZE     = 50;
+let selectedItems  = new Set();
+let currentView    = 'grid';
+let currentFilter  = 'all';
+let currentSort    = 'date-desc';
+let currentLbIndex = 0;
+let pendingDeleteId= null;
+let pendingRenameId= null;
+let filteredPhotos = [];
+let currentPage    = 1;
+const PAGE_SIZE    = 50;
+const COLORS       = ['#6d5cff','#a78bfa','#22d3ee','#10b981','#fbbf24','#f472b6','#34d399','#60a5fa'];
 
-const COLORS = ['#6d5cff','#a78bfa','#22d3ee','#10b981','#fbbf24','#f472b6','#34d399','#60a5fa'];
+// Multiple Drive accounts
+let driveAccounts  = JSON.parse(localStorage.getItem('dg_driveAccounts')||'[]');
+const ACCT_COLORS  = ['#4285f4','#10b981','#fbbf24','#f472b6','#6d5cff','#22d3ee'];
+let driveLoadAbort = false;
+let savedClientId  = localStorage.getItem('dg_clientId')||'';
 
-if (photos.length === 0) {
-  const names = ['Mountain Sunrise','Beach Day','City Lights','Forest Trail','Portrait Session','Sunset Drive','Rainy Street','Architecture','Food Photography','Wildlife','Abstract Art','Travel Memories','Family Portrait','Night Sky','Macro Flowers'];
-  const types = ['image','image','image','video','image','image','image','image','image','video','image','image','image','image','image'];
-  const emojis= ['🏔️','🏖️','🌃','🌲','📸','🌅','🌧️','🏛️','🍕','🦁','🎨','✈️','👨‍👩‍👧','⭐','🌸'];
-  photos = names.map((n,i) => ({
-    id: Date.now()+i, name: n+(types[i]==='video'?'.mp4':'.jpg'),
-    type:types[i], size:(Math.random()*8+0.5).toFixed(1)+' MB',
-    date:new Date(Date.now()-i*86400000*2).toISOString(),
-    starred:i<3, color:COLORS[i%COLORS.length], emoji:emojis[i]
-  }));
-  albums = [
-    {id:1,name:'Summer 2024',desc:'Beach photos',count:32,color:'#fbbf24',emoji:'☀️'},
-    {id:2,name:'Family',desc:'Family memories',count:89,color:'#10b981',emoji:'👨‍👩‍👧'},
-    {id:3,name:'Work',desc:'Portfolio',count:47,color:'#6d5cff',emoji:'💼'},
-    {id:4,name:'Travel 2023',desc:'Adventures',count:124,color:'#22d3ee',emoji:'✈️'},
-    {id:5,name:'Nature',desc:'Wildlife',count:61,color:'#34d399',emoji:'🌿'},
-    {id:6,name:'Food',desc:'Culinary',count:28,color:'#f472b6',emoji:'🍴'},
+// Upload state
+let uploadTargetAccountIdx = 0; // which account to upload to
+let uploadFolderId = 'root';
+let uploadFolderName = 'My Drive';
+let fpCurrentFolderId = 'root';
+let fpCurrentPath = [{id:'root',name:'My Drive'}];
+
+// ── Seed demo data ──
+if(photos.length===0){
+  const demos=[
+    {n:'Mountain Sunrise.jpg',t:'image',e:'🏔️'},{n:'Beach Day.jpg',t:'image',e:'🏖️'},
+    {n:'City Lights.jpg',t:'image',e:'🌃'},{n:'Forest Trail.mp4',t:'video',e:'🌲'},
+    {n:'Portrait Session.jpg',t:'image',e:'📸'},{n:'Sunset Drive.jpg',t:'image',e:'🌅'},
+    {n:'Night Sky.jpg',t:'image',e:'⭐'},{n:'Macro Flowers.jpg',t:'image',e:'🌸'},
+    {n:'Wildlife.mp4',t:'video',e:'🦁'},{n:'Travel.jpg',t:'image',e:'✈️'},
+  ];
+  photos=demos.map((d,i)=>({id:Date.now()+i,name:d.n,type:d.t,size:(Math.random()*8+0.5).toFixed(1)+' MB',
+    date:new Date(Date.now()-i*86400000*3).toISOString(),starred:i<2,
+    color:COLORS[i%COLORS.length],emoji:d.e}));
+  albums=[
+    {id:1,name:'Summer 2024',desc:'Beach',count:32,color:'#fbbf24',emoji:'☀️'},
+    {id:2,name:'Family',desc:'',count:89,color:'#10b981',emoji:'👨‍👩‍👧'},
+    {id:3,name:'Travel',desc:'Adventures',count:124,color:'#22d3ee',emoji:'✈️'},
+    {id:4,name:'Nature',desc:'Wildlife',count:61,color:'#34d399',emoji:'🌿'},
   ];
   saveData();
 }
@@ -1128,14 +1211,14 @@ function saveData(){
   localStorage.setItem('dg_albums',JSON.stringify(albums));
   localStorage.setItem('dg_trash', JSON.stringify(trash));
 }
+function saveDriveAccounts(){localStorage.setItem('dg_driveAccounts',JSON.stringify(driveAccounts));}
 
 // ══ PIN LOCK ══
 let pinValue='';
 function getCurrentTimePIN(){const n=new Date();return String(n.getHours()).padStart(2,'0')+String(n.getMinutes()).padStart(2,'0');}
 function updatePinHint(){
-  const pin=getCurrentTimePIN(),n=new Date();
-  let h=n.getHours(),m=n.getMinutes(),ampm=h>=12?'PM':'AM';h=h%12||12;
-  document.getElementById('pinHintText').textContent=`এখন ${h}:${String(m).padStart(2,'0')} ${ampm} → PIN: ${pin}`;
+  const pin=getCurrentTimePIN(),n=new Date();let h=n.getHours(),m=n.getMinutes(),ap=h>=12?'PM':'AM';h=h%12||12;
+  document.getElementById('pinHintText').textContent=`এখন ${h}:${String(m).padStart(2,'0')} ${ap} → PIN: ${pin}`;
 }
 updatePinHint();setInterval(updatePinHint,10000);
 function addPin(d){if(pinValue.length>=4)return;pinValue+=d;updateDots();if(pinValue.length===4)setTimeout(submitPin,200);}
@@ -1143,18 +1226,18 @@ function clearPin(){pinValue=pinValue.slice(0,-1);updateDots();document.getEleme
 function updateDots(){document.querySelectorAll('.pin-dot').forEach((d,i)=>d.classList.toggle('filled',i<pinValue.length));}
 function submitPin(){
   if(pinValue===getCurrentTimePIN()){unlockApp();return;}
-  document.getElementById('pinError').textContent='⚠ ভুল PIN। সঠিক PIN: '+getCurrentTimePIN();
+  document.getElementById('pinError').textContent='⚠ ভুল PIN। সঠিক: '+getCurrentTimePIN();
   pinValue='';updateDots();
   const c=document.querySelector('.lock-card');c.style.animation='shake 0.4s ease';setTimeout(()=>c.style.animation='',400);
 }
 async function tryBiometric(){
   if(window.PublicKeyCredential){showToast('Biometric চাওয়া হচ্ছে...','info');setTimeout(()=>{unlockApp();showToast('✓ Biometric সফল!','success');},1500);}
-  else{showToast('এই ডিভাইসে Biometric নেই','error');}
+  else showToast('এই ডিভাইসে Biometric নেই','error');
 }
 function unlockApp(){
   document.getElementById('lockScreen').style.display='none';
   const app=document.getElementById('app');app.style.display='flex';app.style.flexDirection='column';
-  renderPhotos();renderAlbums();updateStats();initDriveUI();
+  renderPhotos();renderAlbums();updateStats();initDriveUI();initUploadPage();
 }
 function lockApp(){
   document.getElementById('lockScreen').style.display='flex';
@@ -1171,6 +1254,7 @@ function showPage(name,el){
   closeSidebar();
   if(name==='trash')renderTrash();
   if(name==='fileman')initFileManager();
+  if(name==='upload')initUploadPage();
 }
 function setMobileNav(name){
   document.querySelectorAll('.mnav-item').forEach(b=>b.classList.remove('active'));
@@ -1179,7 +1263,7 @@ function setMobileNav(name){
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('open');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');}
 
-// ══ PHOTO FILTER/SORT ══
+// ══ PHOTOS ══
 function getFilteredPhotos(){
   let list=[...photos];
   if(currentFilter==='image')list=list.filter(p=>p.type==='image');
@@ -1194,34 +1278,30 @@ function getFilteredPhotos(){
     if(currentSort==='date-asc') return new Date(a.date)-new Date(b.date);
     if(currentSort==='name-asc') return a.name.localeCompare(b.name);
     if(currentSort==='name-desc')return b.name.localeCompare(a.name);
+    if(currentSort==='size-desc')return (b.sizeBytes||0)-(a.sizeBytes||0);
     return 0;
   });
   return list;
 }
 
-// ══ RENDER PHOTOS (Pagination 50/page) ══
 function renderPhotos(){
   filteredPhotos=getFilteredPhotos();
   const grid=document.getElementById('photoGrid');
   const totalPages=Math.ceil(filteredPhotos.length/PAGE_SIZE);
   if(currentPage>totalPages)currentPage=Math.max(1,totalPages);
-
   document.getElementById('photoCountLabel').textContent='('+filteredPhotos.length+')';
   const nav=document.getElementById('navCount');if(nav)nav.textContent=photos.length;
   const mnc=document.getElementById('mnavCount');
   if(mnc){mnc.textContent=photos.length>99?'99+':photos.length;mnc.style.display=photos.length?'':'none';}
-
   if(filteredPhotos.length===0){
     grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-image"></i><h3>কোনো ফাইল নেই</h3><p>ছবি আপলোড করুন বা Google Drive সংযুক্ত করুন</p></div>';
     hidePagination();return;
   }
-
   const start=(currentPage-1)*PAGE_SIZE,end=Math.min(start+PAGE_SIZE,filteredPhotos.length);
   grid.innerHTML='';
   const frag=document.createDocumentFragment();
   for(let i=start;i<end;i++){const d=document.createElement('div');d.innerHTML=makePhotoCard(filteredPhotos[i],i);frag.appendChild(d.firstChild);}
   grid.appendChild(frag);
-
   renderPagination(currentPage,totalPages);
   const pb=document.getElementById('paginationInfo');
   if(pb){pb.style.display='block';pb.innerHTML=`দেখাচ্ছে <strong>${start+1}–${end}</strong> / মোট <strong>${filteredPhotos.length}</strong>টি`;}
@@ -1233,18 +1313,20 @@ function makePhotoCard(p,idx){
   const thumb=p.thumb
     ?`<img src="${p.thumb}" class="photo-thumb" alt="${p.name}" loading="lazy" decoding="async">`
     :`<div class="photo-thumb-placeholder"><span style="font-size:34px">${p.emoji||(isVideo?'🎬':'🖼️')}</span></div>`;
+  const accountDot = p.accountIdx !== undefined ? `<div style="position:absolute;bottom:4px;left:4px;z-index:3;width:10px;height:10px;border-radius:50%;background:${ACCT_COLORS[p.accountIdx%ACCT_COLORS.length]};border:1.5px solid rgba(0,0,0,0.5)" title="${driveAccounts[p.accountIdx]?.email||''}"></div>` : '';
   return `<div class="photo-card ${sel?'selected':''}" id="card-${p.id}">
     <div class="select-check" onclick="toggleSelect(event,'${p.id}')">${sel?'<i class="fa-solid fa-check"></i>':''}</div>
-    ${isVideo?`<div class="video-badge">▶ VIDEO</div>`:''}
-    ${p.fromDrive?`<div class="drive-badge"><i class="fa-brands fa-google-drive"></i></div>`:''}
+    ${isVideo?'<div class="video-badge">▶ VIDEO</div>':''}
+    ${p.fromDrive?'<div class="drive-badge"><i class="fa-brands fa-google-drive"></i></div>':''}
     <div class="photo-overlay"></div>
+    ${accountDot}
     <div onclick="openLightbox(${idx})">${thumb}</div>
     <div class="photo-info">
       <div class="photo-name" title="${p.name}">${p.name}</div>
       <div class="photo-meta"><span style="display:flex;align-items:center;gap:4px"><span class="ext-badge">${ext}</span>${p.size}</span><span>${formatDate(p.date)}</span></div>
     </div>
     <div class="photo-actions">
-      <button class="pab" onclick="toggleStar(event,'${p.id}')" title="${p.starred?'Unstar':'Star'}"><i class="${p.starred?'fa-solid':'fa-regular'} fa-star" ${p.starred?'style="color:var(--gold)"':''}></i></button>
+      <button class="pab" onclick="toggleStar(event,'${p.id}')" title="Star"><i class="${p.starred?'fa-solid':'fa-regular'} fa-star" ${p.starred?'style="color:var(--gold)"':''}></i></button>
       <button class="pab info-btn" onclick="showFileDetails(event,'${p.id}')" title="Details"><i class="fa-solid fa-circle-info"></i></button>
       <button class="pab" onclick="sharePhoto(event,'${p.id}')" title="Share"><i class="fa-solid fa-share"></i></button>
       <button class="pab danger" onclick="deletePhoto(event,'${p.id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
@@ -1256,44 +1338,26 @@ function renderPagination(page,total){
   const bar=document.getElementById('paginationBar');
   if(total<=1){bar.style.display='none';return;}
   bar.style.display='flex';bar.innerHTML='';
-
   const prev=document.createElement('button');prev.className='pg-btn';prev.innerHTML='<i class="fa-solid fa-chevron-left"></i>';prev.disabled=page<=1;
   prev.onclick=()=>{currentPage=page-1;renderPhotos();scrollToGrid();};bar.appendChild(prev);
-
   getPageNums(page,total).forEach(n=>{
     const b=document.createElement('button');
     if(n==='...'){b.className='pg-btn ell';b.textContent='···';}
     else{b.className='pg-btn'+(n===page?' active':'');b.textContent=n;b.onclick=()=>{currentPage=n;renderPhotos();scrollToGrid();};}
     bar.appendChild(b);
   });
-
   const next=document.createElement('button');next.className='pg-btn';next.innerHTML='<i class="fa-solid fa-chevron-right"></i>';next.disabled=page>=total;
   next.onclick=()=>{currentPage=page+1;renderPhotos();scrollToGrid();};bar.appendChild(next);
 }
-function hidePagination(){
-  document.getElementById('paginationBar').style.display='none';
-  document.getElementById('paginationInfo').style.display='none';
-}
-function getPageNums(cur,tot){
-  if(tot<=7)return Array.from({length:tot},(_,i)=>i+1);
-  if(cur<=4)return[1,2,3,4,5,'...',tot];
-  if(cur>=tot-3)return[1,'...',tot-4,tot-3,tot-2,tot-1,tot];
-  return[1,'...',cur-1,cur,cur+1,'...',tot];
-}
+function hidePagination(){document.getElementById('paginationBar').style.display='none';document.getElementById('paginationInfo').style.display='none';}
+function getPageNums(cur,tot){if(tot<=7)return Array.from({length:tot},(_,i)=>i+1);if(cur<=4)return[1,2,3,4,5,'...',tot];if(cur>=tot-3)return[1,'...',tot-4,tot-3,tot-2,tot-1,tot];return[1,'...',cur-1,cur,cur+1,'...',tot];}
 function scrollToGrid(){document.getElementById('photoGrid').scrollIntoView({behavior:'smooth',block:'start'});}
-
-function setView(v,btn){
-  currentView=v;
-  document.querySelectorAll('.vbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-  const g=document.getElementById('photoGrid');
-  g.className='photo-grid'+(v==='list'?' list-view':v==='compact'?' compact-view':'');
-}
+function setView(v,btn){currentView=v;document.querySelectorAll('.vbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const g=document.getElementById('photoGrid');g.className='photo-grid'+(v==='list'?' list-view':v==='compact'?' compact-view':'');}
 function filterChip(f,el){currentFilter=f;currentPage=1;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderPhotos();}
 function filterType(f,el){showPage('photos',el);currentFilter=f;currentPage=1;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));renderPhotos();}
 function sortPhotos(v){currentSort=v;currentPage=1;renderPhotos();}
 function searchPhotos(){currentPage=1;renderPhotos();}
-function formatDate(d){return new Date(d).toLocaleDateString('bn-BD',{month:'short',day:'numeric'});}
-
+function formatDate(d){try{return new Date(d).toLocaleDateString('bn-BD',{month:'short',day:'numeric'});}catch{return '';}}
 function updateStats(){
   document.getElementById('statTotal').textContent=photos.length;
   document.getElementById('statVideos').textContent=photos.filter(p=>p.type==='video').length;
@@ -1302,46 +1366,19 @@ function updateStats(){
 }
 
 // ══ SELECTION ══
-function toggleSelect(e,id){
-  e.stopPropagation();const sid=String(id);
-  if(selectedItems.has(sid))selectedItems.delete(sid);else selectedItems.add(sid);
-  updateBulkBar();
-  const card=document.getElementById('card-'+sid);if(!card)return;
-  card.classList.toggle('selected',selectedItems.has(sid));
-  card.querySelector('.select-check').innerHTML=selectedItems.has(sid)?'<i class="fa-solid fa-check"></i>':'';
-}
+function toggleSelect(e,id){e.stopPropagation();const sid=String(id);if(selectedItems.has(sid))selectedItems.delete(sid);else selectedItems.add(sid);updateBulkBar();const card=document.getElementById('card-'+sid);if(!card)return;card.classList.toggle('selected',selectedItems.has(sid));card.querySelector('.select-check').innerHTML=selectedItems.has(sid)?'<i class="fa-solid fa-check"></i>':'';}
 function selectAll(){filteredPhotos.forEach(p=>selectedItems.add(String(p.id)));updateBulkBar();renderPhotos();}
 function clearSelection(){selectedItems.clear();updateBulkBar();renderPhotos();}
 function updateBulkBar(){const n=selectedItems.size;document.getElementById('bulkCount').textContent=n+' selected';document.getElementById('bulkBar').classList.toggle('visible',n>0);}
 
 // ══ PHOTO ACTIONS ══
-function toggleStar(e,id){
-  e.stopPropagation();const p=photos.find(p=>String(p.id)===String(id));
-  if(p){p.starred=!p.starred;saveData();updateStats();renderPhotos();showToast(p.starred?'★ Starred!':'Unstarred','success');}
-}
-function showRename(e,id){
-  e.stopPropagation();const p=photos.find(p=>String(p.id)===String(id));
-  if(p){pendingRenameId=String(id);document.getElementById('renameInput').value=p.name.replace(/\.[^.]+$/,'');openModal('renameModal');}
-}
-function confirmRename(){
-  const p=photos.find(p=>String(p.id)===String(pendingRenameId));
-  if(p){const ext=p.name.match(/\.[^.]+$/)?.[0]||'';const n=document.getElementById('renameInput').value.trim();if(n){p.name=n+ext;saveData();renderPhotos();showToast('Renamed ✓','success');}}
-  closeModal('renameModal');
-}
-function deletePhoto(e,id){
-  e.stopPropagation();const p=photos.find(p=>String(p.id)===String(id));
-  if(p){pendingDeleteId=String(id);document.getElementById('deleteFileName').textContent=p.name;openModal('deleteModal');}
-}
-function confirmDelete(){
-  const idx=photos.findIndex(p=>String(p.id)===String(pendingDeleteId));
-  if(idx!==-1){trash.push({...photos[idx],deletedAt:new Date().toISOString()});photos.splice(idx,1);saveData();renderPhotos();updateStats();
-    document.getElementById('navCount').textContent=photos.length;
-    const tc=document.getElementById('trashCount');tc.style.display='flex';tc.textContent=trash.length;
-    showToast('Trash로 이동됨','error');}
-  closeModal('deleteModal');
-}
+function toggleStar(e,id){e.stopPropagation();const p=photos.find(p=>String(p.id)===String(id));if(p){p.starred=!p.starred;saveData();updateStats();renderPhotos();showToast(p.starred?'★ Starred!':'Unstarred','success');}}
+function showRename(e,id){e.stopPropagation();const p=photos.find(p=>String(p.id)===String(id));if(p){pendingRenameId=String(id);document.getElementById('renameInput').value=p.name.replace(/\.[^.]+$/,'');openModal('renameModal');}}
+function confirmRename(){const p=photos.find(p=>String(p.id)===String(pendingRenameId));if(p){const ext=p.name.match(/\.[^.]+$/)?.[0]||'';const n=document.getElementById('renameInput').value.trim();if(n){p.name=n+ext;saveData();renderPhotos();showToast('Renamed ✓','success');}}closeModal('renameModal');}
+function deletePhoto(e,id){e.stopPropagation();const p=photos.find(p=>String(p.id)===String(id));if(p){pendingDeleteId=String(id);document.getElementById('deleteFileName').textContent=p.name;openModal('deleteModal');}}
+function confirmDelete(){const idx=photos.findIndex(p=>String(p.id)===String(pendingDeleteId));if(idx!==-1){trash.push({...photos[idx],deletedAt:new Date().toISOString()});photos.splice(idx,1);saveData();renderPhotos();updateStats();const tc=document.getElementById('trashCount');tc.style.display='flex';tc.textContent=trash.length;showToast('Trash-এ সরানো হয়েছে','error');}closeModal('deleteModal');}
 function sharePhoto(e,id){e.stopPropagation();navigator.clipboard?.writeText('https://drivegallery.app/share/'+id).catch(()=>{});showToast('Share link copied!','success');}
-function downloadPhoto(e,id){e.stopPropagation();showToast('Download শুরু হচ্ছে...','info');}
+function downloadPhoto(e,id){e.stopPropagation();const p=photos.find(p=>String(p.id)===String(id));if(p?.webViewLink){window.open(p.webViewLink,'_blank');}else showToast('Download শুরু হচ্ছে...','info');}
 
 // ══ FILE DETAILS ══
 function showFileDetails(e,id){
@@ -1351,54 +1388,27 @@ function showFileDetails(e,id){
   const dateStr=new Date(p.date).toLocaleString('bn-BD',{dateStyle:'long',timeStyle:'short'});
   const res=(p.width&&p.height)?`${p.width}×${p.height}px`:'—';
   const dur=p.duration?`${Math.floor(p.duration/60000)}m ${Math.round((p.duration%60000)/1000)}s`:'—';
-  const modDate=p.modifiedDate?new Date(p.modifiedDate).toLocaleDateString('bn-BD'):'—';
-
-  const hero=p.thumb
-    ?`<img src="${p.thumb}" style="max-width:100%;max-height:240px;object-fit:contain">`
-    :`<div class="fd-hero-placeholder"><span style="font-size:72px">${p.emoji||(isVideo?'🎬':'🖼️')}</span><span style="font-size:13px;color:var(--t3)">${isVideo?'ভিডিও':'ছবি'}</span></div>`;
-
-  const tags=`<span class="type-tag ${isVideo?'tag-vid':'tag-img'}"><i class="fa-solid fa-${isVideo?'video':'image'}"></i> ${isVideo?'VIDEO':'IMAGE'}</span>
-    ${fromDrive?'<span class="type-tag tag-drive"><i class="fa-brands fa-google-drive"></i> Google Drive</span>':''}
-    ${p.starred?'<span class="type-tag tag-star"><i class="fa-solid fa-star"></i> Starred</span>':''}`;
-
+  const hero=p.thumb?`<img src="${p.thumb}" style="max-width:100%;max-height:240px;object-fit:contain">`:`<div class="fd-hero-placeholder"><span style="font-size:72px">${p.emoji||(isVideo?'🎬':'🖼️')}</span></div>`;
+  const acctInfo=fromDrive&&p.accountIdx!==undefined?driveAccounts[p.accountIdx]?.email||'Drive':'—';
+  const tags=`<span class="type-tag ${isVideo?'tag-vid':'tag-img'}"><i class="fa-solid fa-${isVideo?'video':'image'}"></i> ${isVideo?'VIDEO':'IMAGE'}</span>${fromDrive?`<span class="type-tag tag-drive"><i class="fa-brands fa-google-drive"></i> Google Drive</span>`:''}${p.starred?'<span class="type-tag tag-star"><i class="fa-solid fa-star"></i> Starred</span>':''}`;
   const meta=[
-    {l:'ফাইলের নাম',v:p.name},
-    {l:'টাইপ',v:(p.mimeType||ext)},
-    {l:'সাইজ',v:p.size||'—'},
-    {l:isVideo?'দৈর্ঘ্য':'রেজোলিউশন',v:isVideo?dur:res},
-    {l:'তৈরির তারিখ',v:dateStr},
-    {l:'পরিবর্তনের তারিখ',v:modDate},
-    {l:'উৎস',v:fromDrive?'Google Drive':'Local Upload'},
-    {l:'ID',v:String(p.driveId||p.id).substring(0,24)+'...'},
+    {l:'ফাইলের নাম',v:p.name},{l:'টাইপ',v:p.mimeType||ext},
+    {l:'সাইজ',v:p.size||'—'},{l:isVideo?'দৈর্ঘ্য':'রেজোলিউশন',v:isVideo?dur:res},
+    {l:'তৈরির তারিখ',v:dateStr},{l:'উৎস',v:acctInfo},
   ];
-
-  document.getElementById('fileDetailContent').innerHTML=`
-    <div class="fd-hero">${hero}</div>
-    <div style="padding:12px 18px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center">${tags}<span style="margin-left:auto;font-size:11px;color:var(--t3);font-family:'JetBrains Mono',monospace">#${photos.indexOf(p)+1}/${photos.length}</span></div>
-    <div class="fd-meta-grid">${meta.map(m=>`<div class="fd-meta-item"><div class="fd-label">${m.l}</div><div class="fd-value">${m.v}</div></div>`).join('')}</div>`;
-
-  const fdStar=document.getElementById('fdStarBtn');
-  fdStar.innerHTML=p.starred?'<i class="fa-solid fa-star" style="color:var(--gold)"></i> Unstar':'<i class="fa-regular fa-star"></i> Star';
-  fdStar.onclick=()=>{toggleStar({stopPropagation:()=>{}},id);closeModal('fileDetailModal');};
+  document.getElementById('fileDetailContent').innerHTML=`<div class="fd-hero">${hero}</div><div style="padding:12px 18px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center">${tags}<span style="margin-left:auto;font-size:11px;color:var(--t3);font-family:'JetBrains Mono',monospace">#${photos.indexOf(p)+1}/${photos.length}</span></div><div class="fd-meta-grid">${meta.map(m=>`<div class="fd-meta-item"><div class="fd-label">${m.l}</div><div class="fd-value">${m.v}</div></div>`).join('')}</div>`;
+  const fdStar=document.getElementById('fdStarBtn');fdStar.innerHTML=p.starred?'<i class="fa-solid fa-star" style="color:var(--gold)"></i> Unstar':'<i class="fa-regular fa-star"></i> Star';fdStar.onclick=()=>{toggleStar({stopPropagation:()=>{}},id);closeModal('fileDetailModal');};
   document.getElementById('fdRenameBtn').onclick=()=>{closeModal('fileDetailModal');pendingRenameId=String(p.id);document.getElementById('renameInput').value=p.name.replace(/\.[^.]+$/,'');openModal('renameModal');};
   document.getElementById('fdDeleteBtn').onclick=()=>{closeModal('fileDetailModal');pendingDeleteId=String(p.id);document.getElementById('deleteFileName').textContent=p.name;openModal('deleteModal');};
   document.getElementById('fdDownloadBtn').onclick=()=>downloadPhoto({stopPropagation:()=>{}},id);
-  const fdDrive=document.getElementById('fdDriveBtn');
-  if(p.webViewLink){fdDrive.style.display='';fdDrive.onclick=()=>window.open(p.webViewLink,'_blank');}
-  else{fdDrive.style.display='none';}
+  const fdDrive=document.getElementById('fdDriveBtn');if(p.webViewLink){fdDrive.style.display='';fdDrive.onclick=()=>window.open(p.webViewLink,'_blank');}else fdDrive.style.display='none';
   openModal('fileDetailModal');
 }
 
 // ══ BULK ══
 function bulkDownload(){showToast('Downloading '+selectedItems.size+' files...','info');clearSelection();}
 function bulkStar(){selectedItems.forEach(id=>{const p=photos.find(p=>String(p.id)===String(id));if(p)p.starred=true;});saveData();updateStats();showToast('Starred '+selectedItems.size+' items','success');clearSelection();}
-function bulkDelete(){
-  const ids=[...selectedItems];
-  ids.forEach(id=>{const idx=photos.findIndex(p=>String(p.id)===String(id));if(idx!==-1){trash.push({...photos[idx],deletedAt:new Date().toISOString()});photos.splice(idx,1);}});
-  saveData();clearSelection();renderPhotos();updateStats();
-  const tc=document.getElementById('trashCount');tc.style.display='flex';tc.textContent=trash.length;
-  showToast(ids.length+' files moved to Trash','error');
-}
+function bulkDelete(){const ids=[...selectedItems];ids.forEach(id=>{const idx=photos.findIndex(p=>String(p.id)===String(id));if(idx!==-1){trash.push({...photos[idx],deletedAt:new Date().toISOString()});photos.splice(idx,1);}});saveData();clearSelection();renderPhotos();updateStats();const tc=document.getElementById('trashCount');tc.style.display='flex';tc.textContent=trash.length;showToast(ids.length+' files moved to Trash','error');}
 
 // ══ LIGHTBOX ══
 function openLightbox(idx){currentLbIndex=idx;showLbPhoto();document.getElementById('lightbox').classList.add('open');}
@@ -1406,75 +1416,33 @@ function showLbPhoto(){
   const p=filteredPhotos[currentLbIndex];if(!p)return;
   const wrap=document.getElementById('lbImgWrap');
   if(p.thumb){wrap.innerHTML=`<img src="${p.thumb}" style="max-width:90vw;max-height:72vh;object-fit:contain;border-radius:10px" alt="${p.name}">`;}
-  else{wrap.innerHTML=`<div style="width:min(80vw,600px);height:60vh;background:linear-gradient(135deg,var(--bg3),var(--bg4));border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px"><span style="font-size:80px">${p.emoji||'🖼️'}</span><span style="color:rgba(255,255,255,0.4);font-size:14px">${p.type==='video'?'Video Preview':'Image Preview'}</span></div>`;}
+  else{wrap.innerHTML=`<div style="width:min(80vw,600px);height:60vh;background:linear-gradient(135deg,var(--bg3),var(--bg4));border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px"><span style="font-size:80px">${p.emoji||'🖼️'}</span><span style="color:rgba(255,255,255,0.4);font-size:14px">${p.type==='video'?'Video':'Image'}</span></div>`;}
   document.getElementById('lbName').textContent=p.name;
   document.getElementById('lbSize').textContent=p.size;
   document.getElementById('lbDate').textContent=new Date(p.date).toLocaleDateString();
   document.getElementById('lbStar').className=p.starred?'fa-solid fa-star':'fa-regular fa-star';
-  if(p.starred)document.getElementById('lbStar').style.color='var(--gold)';else document.getElementById('lbStar').style.color='';
+  document.getElementById('lbStar').style.color=p.starred?'var(--gold)':'';
   document.getElementById('lbStarTxt').textContent=p.starred?'Unstar':'Star';
 }
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
 function lbNavigate(dir){currentLbIndex=(currentLbIndex+dir+filteredPhotos.length)%filteredPhotos.length;showLbPhoto();}
-function downloadCurrent(){showToast('Downloading '+filteredPhotos[currentLbIndex]?.name,'info');}
-function shareCurrent(){navigator.clipboard?.writeText('https://drivegallery.app/share/'+(filteredPhotos[currentLbIndex]?.id)).catch(()=>{});showToast('Share link copied!','success');}
+function downloadCurrent(){downloadPhoto({stopPropagation:()=>{}},filteredPhotos[currentLbIndex]?.id);}
+function shareCurrent(){sharePhoto({stopPropagation:()=>{}},filteredPhotos[currentLbIndex]?.id);}
 function starCurrent(){const p=filteredPhotos[currentLbIndex];if(p){p.starred=!p.starred;saveData();updateStats();showLbPhoto();showToast(p.starred?'★ Starred!':'Unstarred','success');}}
-function renameCurrent(){closeLightbox();const p=filteredPhotos[currentLbIndex];if(p){pendingRenameId=String(p.id);document.getElementById('renameInput').value=p.name.replace(/\.[^.]+$/,'');openModal('renameModal');}}
 function detailsCurrent(){const p=filteredPhotos[currentLbIndex];if(p){closeLightbox();showFileDetails(null,p.id);}}
 function deleteCurrent(){closeLightbox();const p=filteredPhotos[currentLbIndex];if(p){pendingDeleteId=String(p.id);document.getElementById('deleteFileName').textContent=p.name;openModal('deleteModal');}}
-document.addEventListener('keydown',e=>{
-  if(!document.getElementById('lightbox').classList.contains('open'))return;
-  if(e.key==='Escape')closeLightbox();
-  if(e.key==='ArrowLeft')lbNavigate(-1);
-  if(e.key==='ArrowRight')lbNavigate(1);
-});
+document.addEventListener('keydown',e=>{if(!document.getElementById('lightbox').classList.contains('open'))return;if(e.key==='Escape')closeLightbox();if(e.key==='ArrowLeft')lbNavigate(-1);if(e.key==='ArrowRight')lbNavigate(1);});
 
 // ══ ALBUMS ══
 function renderAlbums(){
   const grid=document.getElementById('albumGrid');
-  grid.innerHTML=albums.map(a=>`
-    <div class="album-card" onclick="showToast('Opening: ${a.name}','info')">
-      <div class="album-cover" style="background:linear-gradient(135deg,${a.color}22,${a.color}44)">
-        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px">${a.emoji}</div>
-      </div>
-      <div class="album-info"><div class="album-name">${a.name}</div><div class="album-count"><i class="fa-regular fa-image"></i> ${a.count} photos</div></div>
-    </div>`).join('');
+  grid.innerHTML=albums.map(a=>`<div class="album-card" onclick="showToast('Opening: ${a.name}','info')"><div class="album-cover" style="background:linear-gradient(135deg,${a.color}22,${a.color}44)"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px">${a.emoji}</div></div><div class="album-info"><div class="album-name">${a.name}</div><div class="album-count"><i class="fa-regular fa-image"></i> ${a.count} photos</div></div></div>`).join('');
 }
 function createAlbum(){
   const name=document.getElementById('albumNameInput').value.trim();if(!name)return;
   albums.unshift({id:Date.now(),name,desc:document.getElementById('albumDescInput').value,count:0,color:COLORS[Math.floor(Math.random()*COLORS.length)],emoji:['📁','🎨','🌟','🎭','🌈'][Math.floor(Math.random()*5)]});
-  saveData();renderAlbums();closeModal('newAlbumModal');
-  document.getElementById('albumNameInput').value='';document.getElementById('albumDescInput').value='';
+  saveData();renderAlbums();closeModal('newAlbumModal');document.getElementById('albumNameInput').value='';document.getElementById('albumDescInput').value='';
   showToast('Album created: '+name,'success');
-}
-
-// ══ UPLOAD ══
-function handleDrag(e){e.preventDefault();document.getElementById('dropZone').classList.add('dragover');}
-function handleDragLeave(){document.getElementById('dropZone').classList.remove('dragover');}
-function handleDrop(e){e.preventDefault();document.getElementById('dropZone').classList.remove('dragover');processFiles(e.dataTransfer.files);}
-function handleFileSelect(e){processFiles(e.target.files);}
-function processFiles(files){
-  const q=document.getElementById('uploadQueue');
-  [...files].forEach(file=>{
-    const id=Date.now()+Math.random(),isVideo=file.type.startsWith('video/');
-    const item=document.createElement('div');item.className='upload-item';item.id='uitem-'+id;
-    item.innerHTML=`<i class="fa-${isVideo?'solid fa-video':'regular fa-image'}" style="color:var(--a2)"></i>
-      <div class="upload-info"><div class="upload-name">${file.name}</div><div class="upload-size">${(file.size/1048576).toFixed(1)} MB</div><div class="upload-bar-wrap"><div class="upload-bar-fill" id="prog-${id}" style="width:0%"></div></div></div>
-      <span class="upload-status" id="stat-${id}">0%</span>`;
-    q.prepend(item);simulateUpload(id,file.name,isVideo,file.size);
-  });
-}
-function simulateUpload(id,name,isVideo,size){
-  let pct=0;const iv=setInterval(()=>{
-    pct+=Math.random()*15+5;
-    if(pct>=100){pct=100;clearInterval(iv);
-      const st=document.getElementById('stat-'+id);if(st)st.innerHTML='<i class="fa-solid fa-check" style="color:var(--green)"></i>';
-      photos.unshift({id:Date.now()+Math.random(),name,type:isVideo?'video':'image',size:(size/1048576).toFixed(1)+' MB',date:new Date().toISOString(),starred:false,color:COLORS[Math.floor(Math.random()*COLORS.length)],emoji:isVideo?'🎬':'📸'});
-      saveData();updateStats();document.getElementById('navCount').textContent=photos.length;showToast(name+' uploaded ✓','success');return;
-    }
-    const bar=document.getElementById('prog-'+id),stat=document.getElementById('stat-'+id);
-    if(bar)bar.style.width=pct+'%';if(stat)stat.textContent=Math.round(pct)+'%';
-  },200);
 }
 
 // ══ TRASH ══
@@ -1482,187 +1450,215 @@ function renderTrash(){
   const grid=document.getElementById('trashGrid'),empty=document.getElementById('trashEmpty');
   if(trash.length===0){grid.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  grid.innerHTML=trash.map(p=>`
-    <div class="photo-card" style="opacity:0.7">
-      <div class="photo-thumb-placeholder"><span style="font-size:40px">${p.emoji||'🗑️'}</span></div>
-      <div class="photo-info"><div class="photo-name">${p.name}</div><div class="photo-meta"><span>Deleted ${formatDate(p.deletedAt)}</span></div></div>
-      <div class="photo-actions" style="opacity:1">
-        <button class="pab" onclick="restorePhoto('${p.id}')" title="Restore"><i class="fa-solid fa-rotate-left"></i></button>
-        <button class="pab danger" onclick="permDelete('${p.id}')" title="Delete forever"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-    </div>`).join('');
+  grid.innerHTML=trash.map(p=>`<div class="photo-card" style="opacity:0.7"><div class="photo-thumb-placeholder"><span style="font-size:40px">${p.emoji||'🗑️'}</span></div><div class="photo-info"><div class="photo-name">${p.name}</div><div class="photo-meta"><span>Deleted ${formatDate(p.deletedAt)}</span></div></div><div class="photo-actions" style="opacity:1"><button class="pab" onclick="restorePhoto('${p.id}')"><i class="fa-solid fa-rotate-left"></i></button><button class="pab danger" onclick="permDelete('${p.id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`).join('');
 }
-function restorePhoto(id){
-  const idx=trash.findIndex(p=>String(p.id)===String(id));
-  if(idx!==-1){const p={...trash[idx]};delete p.deletedAt;photos.unshift(p);trash.splice(idx,1);saveData();renderTrash();updateStats();showToast('Photo restored ✓','success');}
-}
-function permDelete(id){
-  trash=trash.filter(p=>String(p.id)!==String(id));saveData();renderTrash();
-  const tc=document.getElementById('trashCount');if(trash.length===0)tc.style.display='none';else tc.textContent=trash.length;
-  showToast('Permanently deleted','error');
-}
+function restorePhoto(id){const idx=trash.findIndex(p=>String(p.id)===String(id));if(idx!==-1){const p={...trash[idx]};delete p.deletedAt;photos.unshift(p);trash.splice(idx,1);saveData();renderTrash();updateStats();showToast('Photo restored ✓','success');}}
+function permDelete(id){trash=trash.filter(p=>String(p.id)!==String(id));saveData();renderTrash();const tc=document.getElementById('trashCount');if(trash.length===0)tc.style.display='none';else tc.textContent=trash.length;showToast('Permanently deleted','error');}
 function emptyTrash(){trash=[];saveData();renderTrash();document.getElementById('trashCount').style.display='none';showToast('Trash emptied','success');}
 
-// ══ MODALS ══
+// ══ MODALS & TOAST ══
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
-
-// ══ TOAST ══
 function showToast(msg,type='info'){
   const icons={success:'fa-circle-check',error:'fa-circle-xmark',info:'fa-circle-info'};
   const t=document.createElement('div');t.className='toast-item '+type;
   t.innerHTML=`<i class="fa-solid ${icons[type]}"></i> ${msg}`;
   document.getElementById('toast').appendChild(t);
-  setTimeout(()=>t.style.opacity='0',3000);
-  setTimeout(()=>t.remove(),3500);
+  setTimeout(()=>t.style.opacity='0',3500);setTimeout(()=>t.remove(),4000);
 }
 
-// ══ SHAKE ANIMATION ══
-const _s=document.createElement('style');
-_s.textContent='@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}';
-document.head.appendChild(_s);
+// ══════════════════════════════════════════════════
+// ══ GOOGLE DRIVE — MULTIPLE ACCOUNTS ══
+// ══════════════════════════════════════════════════
+const DRIVE_SCOPES='https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
 
-// ══════════════════════════════════════
-// ══ GOOGLE DRIVE OAUTH + LOAD ALL ══
-// ══════════════════════════════════════
-const DRIVE_SCOPES=[
-  'https://www.googleapis.com/auth/drive.readonly',
-  'https://www.googleapis.com/auth/userinfo.email',
-  'https://www.googleapis.com/auth/userinfo.profile'
-].join(' ');
-
-let driveAccounts=JSON.parse(localStorage.getItem('dg_driveAccounts')||'[]');
-const ACCOUNT_COLORS=['#4285f4','#10b981','#fbbf24','#f472b6','#6d5cff','#22d3ee'];
-let driveLoadAbort=false;
-
-function saveDriveAccounts(){localStorage.setItem('dg_driveAccounts',JSON.stringify(driveAccounts));}
-
-function validateClientId(inp){
-  const v=inp.value.trim(),hint=document.getElementById('clientIdHint'),btn=document.getElementById('connectDriveBtn');
-  if(!v){hint.innerHTML='<i class="fa-solid fa-info-circle"></i> .apps.googleusercontent.com দিয়ে শেষ হবে';hint.style.color='var(--t3)';btn.disabled=false;return;}
-  if(v.endsWith('.apps.googleusercontent.com')){hint.innerHTML='<i class="fa-solid fa-circle-check" style="color:var(--green)"></i> Client ID সঠিক মনে হচ্ছে';hint.style.color='var(--green)';btn.disabled=false;}
-  else{hint.innerHTML='<i class="fa-solid fa-circle-xmark" style="color:var(--red)"></i> .apps.googleusercontent.com দিয়ে শেষ হতে হবে';hint.style.color='var(--red)';btn.disabled=true;}
+// ── Show Add Account Modal ──
+function showAddAccountModal(){
+  // Load saved client id
+  const saved=localStorage.getItem('dg_clientId')||'';
+  const inp=document.getElementById('modalClientId');
+  if(inp){inp.value=saved;checkSavedClientId();}
+  // Show previously disconnected accounts if any
+  const hist=JSON.parse(localStorage.getItem('dg_accountHistory')||'[]');
+  const prev=document.getElementById('prevAccountsSection');
+  const prevList=document.getElementById('prevAccountsList');
+  const activeEmails=driveAccounts.map(a=>a.email);
+  const pastAccounts=hist.filter(h=>!activeEmails.includes(h.email));
+  if(pastAccounts.length>0&&prev&&prevList){
+    prev.style.display='block';
+    prevList.innerHTML=pastAccounts.map(a=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:6px;cursor:pointer" onclick="reconnectAccount('${a.email}')">
+        <div style="width:34px;height:34px;border-radius:50%;background:${a.color||'#6d5cff'}22;color:${a.color||'#6d5cff'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">${(a.email[0]||'?').toUpperCase()}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.email}</div>
+          <div style="font-size:10.5px;color:var(--t3)">আবার Sign In করুন</div>
+        </div>
+        <i class="fa-solid fa-arrow-right" style="color:var(--a3);font-size:12px"></i>
+      </div>`).join('');
+  } else if(prev) prev.style.display='none';
+  openModal('addAccountModal');
 }
 
-function realConnectDrive(){
-  const clientId=document.getElementById('gClientId').value.trim();
+function checkSavedClientId(){
+  const inp=document.getElementById('modalClientId');
+  const note=document.getElementById('savedClientIdNote');
+  if(!inp||!note)return;
+  const saved=localStorage.getItem('dg_clientId')||'';
+  if(saved&&(!inp.value||inp.value===saved)){inp.value=saved;note.style.display='block';}
+  else note.style.display='none';
+}
+
+function reconnectAccount(email){
+  document.getElementById('modalClientId').value=localStorage.getItem('dg_clientId')||'';
+  connectNewAccount();
+}
+
+function connectNewAccount(){
+  const clientId=(document.getElementById('modalClientId').value||'').trim()||localStorage.getItem('dg_clientId')||'';
   if(!clientId){showToast('Client ID দিন','error');return;}
-  if(!clientId.endsWith('.apps.googleusercontent.com')){showToast('সঠিক Client ID দিন','error');return;}
-  const btn=document.getElementById('connectDriveBtn');
-  btn.innerHTML='<i class="fa-solid fa-rotate fa-spin"></i> সংযুক্ত হচ্ছে...';btn.disabled=true;
+  if(!clientId.endsWith('.apps.googleusercontent.com')){showToast('সঠিক Client ID দিন (.apps.googleusercontent.com)','error');return;}
+  localStorage.setItem('dg_clientId',clientId);
+  savedClientId=clientId;
+  closeModal('addAccountModal');
   openModal('oauthModal');
+  document.getElementById('oauthStep1').style.display='block';
+  document.getElementById('oauthStep2').style.display='none';
+  document.getElementById('oauthStepError').style.display='none';
   if(window.google&&google.accounts){startOAuthFlow(clientId);}
-  else{setTimeout(()=>{if(window.google&&google.accounts)startOAuthFlow(clientId);else{showToast('Google API লোড হয়নি — পেজ refresh করুন','error');closeModal('oauthModal');resetConnectBtn();}},2000);}
+  else setTimeout(()=>{if(window.google&&google.accounts)startOAuthFlow(clientId);else{showOAuthError('Google API লোড হয়নি। পেজ Refresh করুন।');};},2500);
 }
 
 function startOAuthFlow(clientId){
-  const client=google.accounts.oauth2.initTokenClient({
-    client_id:clientId,scope:DRIVE_SCOPES,
-    callback:(response)=>{
-      if(response.error){showToast('OAuth Error: '+response.error,'error');closeModal('oauthModal');resetConnectBtn();return;}
-      fetchGoogleUserInfo(response.access_token,clientId);
-    }
-  });
-  client.requestAccessToken({prompt:'consent'});
+  try{
+    const client=google.accounts.oauth2.initTokenClient({
+      client_id:clientId,scope:DRIVE_SCOPES,
+      callback:(response)=>{
+        if(response.error){showOAuthError('OAuth Error: '+response.error);return;}
+        fetchAndRegisterAccount(response.access_token,clientId);
+      }
+    });
+    client.requestAccessToken({prompt:'select_account'});
+  }catch(err){showOAuthError('Google OAuth শুরু করতে পারেনি: '+err.message);}
 }
 
-async function fetchGoogleUserInfo(accessToken,clientId){
+function showOAuthError(msg){
+  document.getElementById('oauthStep1').style.display='none';
+  document.getElementById('oauthStepError').style.display='block';
+  document.getElementById('oauthErrorMsg').textContent=msg;
+}
+
+async function fetchAndRegisterAccount(accessToken,clientId){
   try{
-    const profileRes=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:'Bearer '+accessToken}});
+    const [profileRes,quotaRes]=await Promise.all([
+      fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:'Bearer '+accessToken}}),
+      fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota,user',{headers:{Authorization:'Bearer '+accessToken}})
+    ]);
     const profile=await profileRes.json();
-    const quotaRes=await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota',{headers:{Authorization:'Bearer '+accessToken}});
-    const quotaData=await quotaRes.json();
-    const quota=quotaData.storageQuota||{};
-    const usedBytes=parseInt(quota.usage||0),totalBytes=parseInt(quota.limit||15*1024*1024*1024);
-    if(driveAccounts.find(a=>a.email===profile.email)){showToast(profile.email+' ইতিমধ্যে সংযুক্ত','error');closeModal('oauthModal');resetConnectBtn();return;}
-    driveAccounts.push({
+    const aboutData=await quotaRes.json();
+    const quota=aboutData.storageQuota||{};
+    const usedBytes=parseInt(quota.usage||0),totalBytes=parseInt(quota.limit||16106127360);
+    const acctIdx=driveAccounts.length;
+
+    // Check duplicate
+    if(driveAccounts.find(a=>a.email===profile.email)){
+      // Update token only
+      const existing=driveAccounts.find(a=>a.email===profile.email);
+      existing.accessToken=accessToken;existing.tokenExpiry=Date.now()+3600000;
+      saveDriveAccounts();initDriveUI();
+      document.getElementById('oauthStep1').style.display='none';
+      document.getElementById('oauthStep2').style.display='block';
+      document.getElementById('oauthSuccessEmail').textContent=profile.email+' — Token renewed';
+      setTimeout(()=>closeModal('oauthModal'),2000);
+      showToast('✅ Token renewed: '+profile.email,'success');
+      // Re-sync
+      loadAllDrivePhotos(accessToken,existing.accountIdx||acctIdx);
+      return;
+    }
+
+    const newAcct={
       email:profile.email,name:profile.name||profile.email,
       picture:profile.picture||null,avatar:(profile.name||profile.email)[0].toUpperCase(),
-      color:ACCOUNT_COLORS[driveAccounts.length%ACCOUNT_COLORS.length],
+      color:ACCT_COLORS[acctIdx%ACCT_COLORS.length],
       accessToken,clientId,tokenExpiry:Date.now()+3600000,
-      usedStorage:(usedBytes/1073741824).toFixed(2)+' GB',
-      totalStorage:(totalBytes/1073741824).toFixed(1)+' GB',
-      usedBytes,totalBytes,syncStatus:'সিঙ্ক সম্পন্ন',syncing:false,
-      addedAt:new Date().toISOString()
-    });
-    saveDriveAccounts();initDriveUI();
-    document.getElementById('oauthSuccessEmail').textContent=profile.email;
+      usedBytes,totalBytes,
+      usedStorage:formatBytes(usedBytes),totalStorage:formatBytes(totalBytes),
+      accountIdx:acctIdx,addedAt:new Date().toISOString()
+    };
+    driveAccounts.push(newAcct);
+    saveDriveAccounts();
+
+    // Save to history
+    const hist=JSON.parse(localStorage.getItem('dg_accountHistory')||'[]');
+    if(!hist.find(h=>h.email===profile.email))hist.push({email:profile.email,color:newAcct.color});
+    localStorage.setItem('dg_accountHistory',JSON.stringify(hist));
+
+    initDriveUI();initUploadPage();
     document.getElementById('oauthStep1').style.display='none';
     document.getElementById('oauthStep2').style.display='block';
-    setTimeout(()=>{closeModal('oauthModal');document.getElementById('oauthStep1').style.display='block';document.getElementById('oauthStep2').style.display='none';},2000);
-    showToast('✅ '+profile.email+' সফলভাবে সংযুক্ত!','success');
-    // Auto-load all photos
-    loadAllDrivePhotos(accessToken);
-  }catch(e){showToast('Error: '+e.message,'error');closeModal('oauthModal');resetConnectBtn();}
+    document.getElementById('oauthSuccessEmail').textContent=profile.email;
+    setTimeout(()=>closeModal('oauthModal'),2000);
+    showToast('✅ '+profile.email+' সংযুক্ত!','success');
+
+    // Immediately load all photos from this account
+    loadAllDrivePhotos(accessToken,acctIdx);
+  }catch(e){showOAuthError('Error: '+e.message);}
 }
 
-// ══ LOAD ALL DRIVE PHOTOS — NO LIMIT ══
-async function loadAllDrivePhotos(accessToken){
+function formatBytes(b){if(!b||b===0)return'—';if(b>=1099511627776)return(b/1099511627776).toFixed(2)+' TB';if(b>=1073741824)return(b/1073741824).toFixed(2)+' GB';return(b/1048576).toFixed(1)+' MB';}
+
+// ── LOAD ALL PHOTOS — ALL ACCOUNTS MERGED ──
+async function loadAllDrivePhotos(accessToken,accountIdx){
   driveLoadAbort=false;
-  let pageToken=null,totalLoaded=0,batchNum=0;
+  let pageToken=null,totalLoaded=0;
   const existingIds=new Set(photos.filter(p=>p.driveId).map(p=>p.driveId));
-  showDriveProgress(0,'শুরু হচ্ছে...');
-  showToast('Google Drive থেকে সব ছবি/ভিডিও লোড হচ্ছে...','info');
-
+  showDriveProgress(0,accountIdx,'শুরু হচ্ছে...');
   const q=encodeURIComponent("(mimeType contains 'image/' or mimeType contains 'video/') and trashed=false");
-
   try{
     do{
       if(driveLoadAbort){showToast('লোড বন্ধ করা হয়েছে','info');break;}
       let url=`https://www.googleapis.com/drive/v3/files?q=${q}&fields=nextPageToken,files(id,name,mimeType,size,createdTime,modifiedTime,thumbnailLink,imageMediaMetadata,videoMediaMetadata,webViewLink,parents)&pageSize=1000&orderBy=createdTime desc`;
       if(pageToken)url+='&pageToken='+encodeURIComponent(pageToken);
-
       const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
-      if(!res.ok){showToast('Drive API error: '+res.status,'error');break;}
-
+      if(!res.ok){if(res.status===401){showToast('Token মেয়াদ শেষ — পুনরায় Sign In করুন','error');break;}throw new Error('API Error: '+res.status);}
       const data=await res.json();
-      const files=data.files||[];
       pageToken=data.nextPageToken||null;
-      batchNum++;
-
-      const newPhotos=files.filter(f=>!existingIds.has(f.id)).map((f,i)=>{
+      const files=(data.files||[]).filter(f=>!existingIds.has(f.id));
+      const newPhotos=files.map((f,i)=>{
         existingIds.add(f.id);
         const isVid=f.mimeType.startsWith('video/');
         const sizeBytes=parseInt(f.size||0);
-        const thumb=f.thumbnailLink?f.thumbnailLink.replace('=s220','=s400'):null;
         return{
           id:'drive_'+f.id,driveId:f.id,name:f.name,
           type:isVid?'video':'image',mimeType:f.mimeType,
-          size:sizeBytes>0?(sizeBytes/1048576).toFixed(1)+' MB':'—',sizeBytes,
-          date:f.createdTime||new Date().toISOString(),
-          modifiedDate:f.modifiedTime||null,
+          size:sizeBytes>0?formatBytes(sizeBytes):'—',sizeBytes,
+          date:f.createdTime||new Date().toISOString(),modifiedDate:f.modifiedTime||null,
           webViewLink:f.webViewLink||null,
-          width:f.imageMediaMetadata?.width||f.videoMediaMetadata?.width||null,
-          height:f.imageMediaMetadata?.height||f.videoMediaMetadata?.height||null,
+          width:f.imageMediaMetadata?.width||null,height:f.imageMediaMetadata?.height||null,
           duration:f.videoMediaMetadata?.durationMillis||null,
           starred:false,color:COLORS[(totalLoaded+i)%COLORS.length],
-          emoji:isVid?'🎬':'🖼️',thumb,fromDrive:true,
-          parentId:f.parents?.[0]||null,
+          emoji:isVid?'🎬':'🖼️',
+          thumb:f.thumbnailLink?f.thumbnailLink.replace('=s220','=s400'):null,
+          fromDrive:true,accountIdx,parentId:f.parents?.[0]||null,
         };
       });
-
-      if(newPhotos.length>0){
-        photos=[...newPhotos,...photos];
-        totalLoaded+=newPhotos.length;
-        showDriveProgress(totalLoaded,pageToken?`আরো লোড হচ্ছে...`:'সম্পন্ন');
-        if(batchNum%3===0||!pageToken){saveData();renderPhotos();updateStats();}
-      }
-      if(pageToken)await new Promise(r=>setTimeout(r,100));
+      if(newPhotos.length>0){photos=[...newPhotos,...photos];totalLoaded+=newPhotos.length;showDriveProgress(totalLoaded,accountIdx,pageToken?'লোড হচ্ছে...':'সম্পন্ন');if(totalLoaded%200===0||!pageToken){saveData();renderPhotos();updateStats();}}
+      if(pageToken)await new Promise(r=>setTimeout(r,80));
     }while(pageToken);
-
-    saveData();renderPhotos();updateStats();
-    hideDriveProgress();
-    showToast('✅ Drive থেকে মোট '+totalLoaded+'টি ফাইল লোড হয়েছে!','success');
-  }catch(e){hideDriveProgress();showToast('Drive লোড error: '+e.message,'error');}
+    saveData();renderPhotos();updateStats();hideDriveProgress();
+    showToast('✅ '+driveAccounts[accountIdx]?.email+': '+totalLoaded+'টি ফাইল লোড হয়েছে','success');
+    const ls=document.getElementById('lastSyncText');if(ls)ls.textContent='Last: '+new Date().toLocaleTimeString();
+  }catch(e){hideDriveProgress();showToast('Error: '+e.message,'error');}
 }
 
-function showDriveProgress(count,status){
+function showDriveProgress(count,acctIdx,status){
   let el=document.getElementById('driveLoadProgress');
   if(!el){el=document.createElement('div');el.id='driveLoadProgress';document.body.appendChild(el);}
-  el.innerHTML=`<div style="width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--a1);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0"></div>
-    <span>Drive: <strong style="color:var(--a3)">${count}</strong> ফাইল ${status}</span>
-    <button onclick="driveLoadAbort=true;hideDriveProgress()" style="background:none;border:none;color:var(--t3);cursor:pointer;margin-left:4px;font-size:16px">✕</button>`;
+  const acct=driveAccounts[acctIdx];
+  const color=acct?.color||'var(--a1)';
+  el.innerHTML=`<div style="width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:${color};border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0"></div>
+    <span style="font-size:12px">${acct?.email||'Drive'}: <strong style="color:${color}">${count}</strong> ${status}</span>
+    <button onclick="driveLoadAbort=true;hideDriveProgress()" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;margin-left:4px">✕</button>`;
 }
 function hideDriveProgress(){const el=document.getElementById('driveLoadProgress');if(el)el.remove();}
 
@@ -1670,302 +1666,435 @@ function quickSyncDrive(){
   if(driveAccounts.length===0){showToast('Settings থেকে Google Drive সংযুক্ত করুন','error');return;}
   const btn=document.getElementById('quickSyncBtn');
   if(btn){btn.innerHTML='<i class="fa-solid fa-rotate fa-spin"></i> Syncing...';btn.disabled=true;}
-  driveAccounts.forEach(a=>{if(a.accessToken&&Date.now()<a.tokenExpiry)loadAllDrivePhotos(a.accessToken);});
+  let count=0;
+  driveAccounts.forEach((a,i)=>{if(a.accessToken&&Date.now()<a.tokenExpiry){loadAllDrivePhotos(a.accessToken,i);count++;}});
+  if(count===0)showToast('সব tokens মেয়াদ শেষ। পুনরায় Sign In করুন','error');
   setTimeout(()=>{if(btn){btn.innerHTML='<i class="fa-brands fa-google-drive" style="color:#4285f4"></i> Drive Sync';btn.disabled=false;}},5000);
 }
 
-function resetConnectBtn(){
-  const btn=document.getElementById('connectDriveBtn');
-  if(btn){btn.innerHTML='<i class="fa-brands fa-google"></i> Google Drive সংযুক্ত করুন';btn.disabled=false;}
-}
-
-function initDriveUI(){
-  const hasDrives=driveAccounts.length>0;
-  const step1=document.getElementById('driveStep1'),conn=document.getElementById('driveConnected'),badge=document.getElementById('driveStatusBadge');
-  if(!step1||!conn||!badge)return;
-  step1.style.display=hasDrives?'none':'block';
-  conn.style.display=hasDrives?'block':'none';
-  if(hasDrives){
-    badge.textContent=driveAccounts.length+' সংযুক্ত';
-    badge.style.cssText='margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(16,185,129,0.15);color:var(--green)';
-    renderDriveAccounts();renderDriveStorage();
-    // Update storage sidebar
-    if(driveAccounts.length>0){
-      const acc=driveAccounts[0];
-      const pct=Math.min(Math.round((acc.usedBytes/acc.totalBytes)*100),100)||62;
-      document.getElementById('storePct').textContent=pct+'%';
-      document.getElementById('storeFill').style.width=pct+'%';
-      document.getElementById('storeText').textContent=acc.usedStorage+' / '+acc.totalStorage;
-    }
-  }else{
-    badge.textContent='সংযুক্ত নয়';
-    badge.style.cssText='margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(244,63,94,0.12);color:var(--red)';
-  }
-}
-
-function renderDriveAccounts(){
-  const list=document.getElementById('connectedAccountsList');if(!list)return;
-  list.innerHTML=driveAccounts.map((acc,i)=>`
-    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
-      ${acc.picture?`<img src="${acc.picture}" style="width:42px;height:42px;border-radius:50%;border:2px solid var(--border2);object-fit:cover">`:`<div style="width:42px;height:42px;border-radius:50%;background:${acc.color}22;color:${acc.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;border:2px solid var(--border2)">${acc.avatar}</div>`}
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${acc.name||acc.email}</div>
-        <div style="font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${acc.email}</div>
-        <div style="font-size:11px;color:var(--t3);margin-top:2px;display:flex;align-items:center;gap:5px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green)"></div>${acc.usedStorage} / ${acc.totalStorage}</div>
-      </div>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-outline btn-sm" onclick="syncDriveAccount(${i})"><i class="fa-solid fa-rotate"></i></button>
-        <button class="btn btn-outline btn-sm" onclick="disconnectDriveAccount(${i})" style="color:var(--red);border-color:rgba(244,63,94,0.3)"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-    </div>`).join('');
-}
-
-function renderDriveStorage(){
-  const bars=document.getElementById('driveStorageBars');if(!bars)return;
-  bars.innerHTML=driveAccounts.map(acc=>{
-    const pct=Math.min(Math.round((acc.usedBytes/acc.totalBytes)*100),100)||0;
-    const color=pct>80?'var(--red)':pct>60?'var(--gold)':'var(--a1)';
-    return`<div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:5px"><span>${acc.email}</span><span>${acc.usedStorage}/${acc.totalStorage}(${pct}%)</span></div>
-      <div style="height:5px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 0.6s"></div></div>
-    </div>`;
-  }).join('');
+function doSyncNow(){
+  const btn=document.getElementById('syncNowBtn');if(btn){btn.innerHTML='<i class="fa-solid fa-rotate fa-spin"></i> Syncing...';btn.disabled=true;}
+  driveAccounts.forEach((a,i)=>{if(a.accessToken&&Date.now()<a.tokenExpiry)loadAllDrivePhotos(a.accessToken,i);});
+  setTimeout(()=>{if(btn){btn.innerHTML='<i class="fa-solid fa-rotate"></i> এখনই Sync করুন';btn.disabled=false;}},6000);
 }
 
 function syncDriveAccount(i){
   const acc=driveAccounts[i];if(!acc)return;
-  showToast(acc.email+' সিঙ্ক শুরু...','info');
-  if(acc.accessToken&&Date.now()<acc.tokenExpiry)loadAllDrivePhotos(acc.accessToken);
+  if(!acc.accessToken||Date.now()>=acc.tokenExpiry){showToast('Token মেয়াদ শেষ। Sign In করুন।','error');showAddAccountModal();return;}
+  showToast(acc.email+' sync শুরু...','info');
+  loadAllDrivePhotos(acc.accessToken,i);
 }
-function doSyncNow(){
-  const btn=document.getElementById('syncNowBtn');btn.innerHTML='<i class="fa-solid fa-rotate fa-spin"></i> Syncing...';btn.disabled=true;
-  driveAccounts.forEach(a=>{if(a.accessToken&&Date.now()<a.tokenExpiry)loadAllDrivePhotos(a.accessToken);});
-  setTimeout(()=>{btn.innerHTML='<i class="fa-solid fa-rotate"></i> এখনই Sync করুন';btn.disabled=false;localStorage.setItem('dg_lastSync',new Date().toISOString());const el=document.getElementById('lastSyncText');if(el)el.textContent='Last: '+new Date().toLocaleTimeString();},5000);
+
+function disconnectDriveAccount(i){
+  const acc=driveAccounts[i];
+  // Remove photos from this account
+  photos=photos.filter(p=>p.accountIdx!==i);
+  // Renumber remaining accounts
+  photos.forEach(p=>{if(p.accountIdx>i)p.accountIdx--;});
+  driveAccounts.splice(i,1);
+  driveAccounts.forEach((a,idx)=>a.accountIdx=idx);
+  saveDriveAccounts();saveData();initDriveUI();renderPhotos();updateStats();
+  showToast(acc.email+' disconnected','error');
 }
-function disconnectDriveAccount(i){const acc=driveAccounts[i];driveAccounts.splice(i,1);saveDriveAccounts();initDriveUI();showToast(acc.email+' disconnected','error');}
-function disconnectAllDrives(){if(!confirm('সব Google Drive ডিসকানেক্ট করবেন?'))return;driveAccounts=[];saveDriveAccounts();initDriveUI();showToast('All drives disconnected','error');}
-function addAnotherDriveAccount(){document.getElementById('driveStep1').style.display='block';document.getElementById('driveConnected').style.display='none';document.getElementById('gClientId').value='';}
+
+function disconnectAllDrives(){
+  if(!confirm('সব Google Drive account disconnect করবেন? Drive photos মুছে যাবে।'))return;
+  photos=photos.filter(p=>!p.fromDrive);
+  driveAccounts=[];saveDriveAccounts();saveData();initDriveUI();renderPhotos();updateStats();
+  showToast('All drives disconnected','error');
+}
+
+function initDriveUI(){
+  const has=driveAccounts.length>0;
+  const list=document.getElementById('connectedAccountsList');
+  const sync=document.getElementById('syncControls');
+  const badge=document.getElementById('driveStatusBadge');
+  if(!list||!badge)return;
+
+  if(has){
+    badge.textContent=driveAccounts.length+' অ্যাকাউন্ট';
+    badge.style.cssText='margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(16,185,129,0.15);color:var(--green)';
+    list.style.display='block';
+    list.innerHTML=driveAccounts.map((acc,i)=>`
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+        ${acc.picture?`<img src="${acc.picture}" style="width:44px;height:44px;border-radius:50%;border:2px solid ${acc.color};object-fit:cover">`:`<div style="width:44px;height:44px;border-radius:50%;background:${acc.color}22;color:${acc.color};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;border:2px solid ${acc.color}44">${acc.avatar}</div>`}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${acc.name||acc.email}</div>
+          <div style="font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${acc.email}</div>
+          <div style="margin-top:5px">
+            <div style="height:3px;background:var(--bg4);border-radius:2px;margin-bottom:3px;overflow:hidden"><div style="height:100%;width:${Math.min(Math.round(acc.usedBytes/acc.totalBytes*100),100)||0}%;background:${acc.color};border-radius:2px"></div></div>
+            <div style="font-size:10px;color:var(--t4)">${acc.usedStorage} / ${acc.totalStorage} · ${photos.filter(p=>p.accountIdx===i).length} photos</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button class="btn btn-outline btn-xs" onclick="syncDriveAccount(${i})" title="Sync"><i class="fa-solid fa-rotate"></i></button>
+          <button class="btn btn-xs" onclick="disconnectDriveAccount(${i})" title="Remove" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--red)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>`).join('')+`
+      <div style="padding:12px 20px;border-bottom:1px solid var(--border)">
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="showAddAccountModal()">
+          <i class="fa-solid fa-plus" style="color:var(--a2)"></i> আরেকটি অ্যাকাউন্ট যোগ করুন
+        </button>
+      </div>`;
+    if(sync)sync.style.display='block';
+    renderDriveStorageBars();
+    // Update sidebar storage
+    const totalUsed=driveAccounts.reduce((s,a)=>s+a.usedBytes,0);
+    const totalAll=driveAccounts.reduce((s,a)=>s+a.totalBytes,0);
+    const pct=totalAll>0?Math.min(Math.round(totalUsed/totalAll*100),100):62;
+    document.getElementById('storePct').textContent=pct+'%';
+    document.getElementById('storeFill').style.width=pct+'%';
+    document.getElementById('storeText').textContent=formatBytes(totalUsed)+' / '+formatBytes(totalAll);
+  }else{
+    badge.textContent='সংযুক্ত নয়';
+    badge.style.cssText='margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(244,63,94,0.12);color:var(--red)';
+    list.style.display='none';if(sync)sync.style.display='none';
+  }
+}
+
+function renderDriveStorageBars(){
+  const bars=document.getElementById('driveStorageBars');if(!bars)return;
+  bars.innerHTML=driveAccounts.map(acc=>{
+    const pct=acc.totalBytes>0?Math.min(Math.round(acc.usedBytes/acc.totalBytes*100),100):0;
+    return`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px"><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${acc.color};display:inline-block"></span>${acc.email}</span><span>${acc.usedStorage}/${acc.totalStorage} (${pct}%)</span></div><div style="height:4px;background:var(--bg4);border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${acc.color};border-radius:2px;transition:width .6s"></div></div></div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════
+// ══ UPLOAD — DIRECT TO GOOGLE DRIVE ══
+// ══════════════════════════════════════════════════
+function initUploadPage(){
+  const row=document.getElementById('uploadAccountRow');
+  const warn=document.getElementById('noDriveUploadWarn');
+  if(!row||!warn)return;
+  if(driveAccounts.length===0){warn.style.display='flex';row.style.display='none';return;}
+  warn.style.display='none';row.style.display='block';
+  const list=document.getElementById('uploadAccountList');
+  if(!list)return;
+  list.innerHTML=driveAccounts.map((acc,i)=>`
+    <div class="upload-account-chip ${i===uploadTargetAccountIdx?'active':''}" id="uacc-${i}" onclick="selectUploadAccount(${i})"
+      style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:20px;border:1.5px solid ${i===uploadTargetAccountIdx?acc.color:'var(--border2)'};background:${i===uploadTargetAccountIdx?acc.color+'18':'var(--bg3)'};cursor:pointer;transition:all 0.15s">
+      ${acc.picture?`<img src="${acc.picture}" style="width:22px;height:22px;border-radius:50%;object-fit:cover">`:`<div style="width:22px;height:22px;border-radius:50%;background:${acc.color}22;color:${acc.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px">${acc.avatar}</div>`}
+      <span style="font-size:12px;font-weight:600;color:${i===uploadTargetAccountIdx?acc.color:'var(--t2)'}">${acc.email}</span>
+      ${i===uploadTargetAccountIdx?'<i class="fa-solid fa-check" style="font-size:10px;color:'+acc.color+'"></i>':''}
+    </div>`).join('');
+}
+
+function selectUploadAccount(i){
+  uploadTargetAccountIdx=i;initUploadPage();
+}
+
+function handleDrag(e){e.preventDefault();document.getElementById('dropZone').classList.add('dragover');}
+function handleDragLeave(){document.getElementById('dropZone').classList.remove('dragover');}
+function handleDrop(e){e.preventDefault();document.getElementById('dropZone').classList.remove('dragover');processFiles(e.dataTransfer.files);}
+function handleFileSelect(e){processFiles(e.target.files);e.target.value='';}
+
+function processFiles(files){
+  const q=document.getElementById('uploadQueue');
+  [...files].forEach(file=>{
+    const uid='u'+Date.now()+Math.random().toString(36).slice(2);
+    const isVideo=file.type.startsWith('video/');
+    const item=document.createElement('div');item.className='upload-item';item.id='uitem-'+uid;
+    const acct=driveAccounts[uploadTargetAccountIdx];
+    const acctHtml=acct?`<span style="font-size:10px;color:${acct.color};margin-top:2px;display:flex;align-items:center;gap:4px"><i class="fa-brands fa-google-drive"></i>${acct.email}</span>`:'<span style="font-size:10px;color:var(--t3)">Local only</span>';
+    item.innerHTML=`<i class="fa-${isVideo?'solid fa-video':'regular fa-image'}" style="color:var(--a2)"></i>
+      <div class="upload-info">
+        <div class="upload-name">${file.name}</div>
+        <div class="upload-size" style="display:flex;align-items:center;gap:8px">${(file.size/1048576).toFixed(1)} MB ${acctHtml}</div>
+        <div class="upload-bar-wrap"><div class="upload-bar-fill" id="prog-${uid}" style="width:0%"></div></div>
+      </div>
+      <span class="upload-status" id="stat-${uid}">0%</span>`;
+    q.prepend(item);
+    if(acct&&acct.accessToken&&Date.now()<acct.tokenExpiry){
+      uploadToDrive(uid,file,acct,uploadTargetAccountIdx);
+    }else{
+      simulateLocalUpload(uid,file,isVideo);
+    }
+  });
+}
+
+// ── REAL Drive Upload (multipart) ──
+async function uploadToDrive(uid,file,account,acctIdx){
+  const bar=document.getElementById('prog-'+uid),stat=document.getElementById('stat-'+uid);
+  try{
+    // Step 1: initiate resumable upload
+    const metadata={name:file.name,mimeType:file.type,parents:uploadFolderId!=='root'?[uploadFolderId]:undefined};
+    const initRes=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,webViewLink,thumbnailLink,size,createdTime,mimeType',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+account.accessToken,'Content-Type':'application/json','X-Upload-Content-Type':file.type,'X-Upload-Content-Length':file.size},
+      body:JSON.stringify(metadata)
+    });
+    if(!initRes.ok)throw new Error('Init failed: '+initRes.status);
+    const uploadUrl=initRes.headers.get('Location');
+    if(!uploadUrl)throw new Error('No upload URL');
+
+    // Step 2: upload in chunks with XHR for progress
+    const driveFile=await new Promise((resolve,reject)=>{
+      const xhr=new XMLHttpRequest();
+      xhr.open('PUT',uploadUrl);
+      xhr.setRequestHeader('Content-Type',file.type);
+      xhr.upload.onprogress=e=>{
+        if(e.lengthComputable){const pct=Math.round(e.loaded/e.total*100);if(bar)bar.style.width=pct+'%';if(stat)stat.textContent=pct+'%';}
+      };
+      xhr.onload=()=>{
+        if(xhr.status>=200&&xhr.status<300){try{resolve(JSON.parse(xhr.responseText));}catch{reject(new Error('Bad response'));}}
+        else reject(new Error('Upload failed: '+xhr.status));
+      };
+      xhr.onerror=()=>reject(new Error('Network error'));
+      xhr.send(file);
+    });
+
+    // Success — add to photos
+    if(stat)stat.innerHTML='<i class="fa-solid fa-check" style="color:var(--green)"></i>';
+    const isVid=file.type.startsWith('video/');
+    const newPhoto={
+      id:'drive_'+driveFile.id,driveId:driveFile.id,name:driveFile.name,
+      type:isVid?'video':'image',mimeType:driveFile.mimeType||file.type,
+      size:formatBytes(file.size),sizeBytes:file.size,
+      date:driveFile.createdTime||new Date().toISOString(),
+      webViewLink:driveFile.webViewLink||null,
+      thumb:driveFile.thumbnailLink?driveFile.thumbnailLink.replace('=s220','=s400'):null,
+      starred:false,color:COLORS[photos.length%COLORS.length],emoji:isVid?'🎬':'📸',
+      fromDrive:true,accountIdx:acctIdx,parentId:uploadFolderId!=='root'?uploadFolderId:null,
+    };
+    photos.unshift(newPhoto);saveData();updateStats();renderPhotos();
+    document.getElementById('navCount').textContent=photos.length;
+    showToast('✅ '+file.name+' → Drive আপলোড সম্পন্ন','success');
+  }catch(e){
+    if(stat)stat.innerHTML='<i class="fa-solid fa-circle-xmark" style="color:var(--red)"></i>';
+    showToast('Upload failed: '+e.message+' — Local-এ সেভ হচ্ছে','error');
+    simulateLocalUpload(uid,file,file.type.startsWith('video/'),true);
+  }
+}
+
+// ── Local-only upload fallback ──
+function simulateLocalUpload(uid,file,isVideo,alreadyFailed=false){
+  const bar=document.getElementById('prog-'+uid),stat=document.getElementById('stat-'+uid);
+  if(alreadyFailed){
+    if(bar)bar.style.background='var(--red)';
+  }
+  let pct=0;const iv=setInterval(()=>{
+    pct+=Math.random()*18+7;if(pct>=100){pct=100;clearInterval(iv);
+      if(stat)stat.innerHTML='<i class="fa-solid fa-check" style="color:var(--green)"></i>';
+      photos.unshift({id:Date.now()+Math.random(),name:file.name,type:isVideo?'video':'image',
+        size:formatBytes(file.size),sizeBytes:file.size,date:new Date().toISOString(),
+        starred:false,color:COLORS[Math.floor(Math.random()*COLORS.length)],emoji:isVideo?'🎬':'📸'});
+      saveData();updateStats();document.getElementById('navCount').textContent=photos.length;return;}
+    if(bar)bar.style.width=pct+'%';if(stat)stat.textContent=Math.round(pct)+'%';
+  },200);
+}
+
+// ══ FOLDER PICKER ══
+async function showFolderPicker(){
+  const acct=driveAccounts[uploadTargetAccountIdx];
+  if(!acct){showToast('আগে Account Select করুন','error');return;}
+  fpCurrentFolderId='root';fpCurrentPath=[{id:'root',name:'My Drive'}];
+  openModal('folderPickerModal');
+  loadFpFolders('root',acct.accessToken);
+}
+
+async function loadFpFolders(parentId,accessToken){
+  const list=document.getElementById('fpFolderList');
+  if(!list)return;
+  list.innerHTML='<div style="padding:30px;text-align:center;color:var(--t3)"><div class="fm-spinner" style="margin:0 auto 12px"></div>Loading...</div>';
+  try{
+    const q=encodeURIComponent(`mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`);
+    const res=await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&orderBy=name&pageSize=100`,{headers:{Authorization:'Bearer '+accessToken}});
+    const data=await res.json();
+    const folders=data.files||[];
+    // Update breadcrumb
+    document.getElementById('fpBreadcrumb').textContent='📂 '+fpCurrentPath.map(p=>p.name).join(' / ');
+    if(folders.length===0){list.innerHTML='<div style="padding:24px;text-align:center;color:var(--t3);font-size:13px"><i class="fa-regular fa-folder-open" style="font-size:28px;display:block;margin-bottom:8px"></i>কোনো subfolder নেই<br><span style="font-size:11px">এই ফোল্ডারে আপলোড হবে</span></div>';return;}
+    list.innerHTML=folders.map(f=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s" onmouseover="this.style.background='var(--glass)'" onmouseout="this.style.background=''" onclick="fpEnterFolder('${f.id}','${f.name.replace(/'/g,"\\'")}')">
+        <i class="fa-solid fa-folder" style="color:#fbbf24;font-size:18px"></i>
+        <span style="flex:1;font-size:13px;font-weight:600">${f.name}</span>
+        <i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--t3)"></i>
+      </div>`).join('');
+  }catch(e){list.innerHTML=`<div style="padding:20px;color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
+}
+
+function fpEnterFolder(id,name){
+  fpCurrentFolderId=id;fpCurrentPath.push({id,name});
+  const acct=driveAccounts[uploadTargetAccountIdx];
+  if(acct)loadFpFolders(id,acct.accessToken);
+}
+function fpGoUp(){
+  if(fpCurrentPath.length<=1)return;
+  fpCurrentPath.pop();
+  const prev=fpCurrentPath[fpCurrentPath.length-1];
+  fpCurrentFolderId=prev.id;
+  const acct=driveAccounts[uploadTargetAccountIdx];
+  if(acct)loadFpFolders(prev.id,acct.accessToken);
+}
+function confirmFolderPick(){
+  uploadFolderId=fpCurrentFolderId;
+  uploadFolderName=fpCurrentPath[fpCurrentPath.length-1].name;
+  document.getElementById('uploadDestText').textContent=uploadFolderName;
+  closeModal('folderPickerModal');
+  showToast('Upload ফোল্ডার: '+uploadFolderName,'success');
+}
 
 // ════════════════════════════════════════
-// ══ FILE MANAGER ══════════════════════
+// ══ FILE MANAGER ══
 // ════════════════════════════════════════
-let fmCurrentPath = [{id:'root',name:'My Drive'}];
-let fmCurrentFolderId = 'root';
-let fmView = 'grid';
-let fmItems = [];
-let fmSelectedItems = new Set();
-let fmAccessToken = null;
-let fmFolderTree = {};
-let fmLoading = false;
+let fmCurrentPath=[{id:'root',name:'My Drive'}];
+let fmCurrentFolderId='root';
+let fmView='grid';
+let fmItems=[];
+let fmAccessToken=null;
+let fmActiveAcctIdx=0;
+let fmLoading=false;
 
 function initFileManager(){
   if(driveAccounts.length===0){
-    document.getElementById('fmContent').innerHTML='<div class="fm-empty"><i class="fa-brands fa-google-drive" style="color:#4285f4;opacity:0.4"></i><h3>Drive সংযুক্ত নেই</h3><p>Settings থেকে Google Drive সংযুক্ত করুন</p><a href="#" onclick="showPage(\'settings\',null)" style="color:var(--a3);text-decoration:underline">Settings খুলুন →</a></div>';
+    document.getElementById('fmContent').innerHTML='<div class="fm-empty"><i class="fa-brands fa-google-drive" style="color:#4285f4;opacity:0.4"></i><h3>Drive সংযুক্ত নেই</h3><p><a href="#" onclick="showPage(\'settings\',null)" style="color:var(--a3)">Settings থেকে যোগ করুন →</a></p></div>';
     return;
   }
-  fmAccessToken = driveAccounts.find(a=>a.accessToken&&Date.now()<a.tokenExpiry)?.accessToken;
-  if(!fmAccessToken){showToast('Drive token মেয়াদ শেষ। পুনরায় সংযুক্ত করুন।','error');return;}
+  fmActiveAcctIdx=0;
+  fmAccessToken=driveAccounts[0]?.accessToken;
+  if(!fmAccessToken||Date.now()>=driveAccounts[0]?.tokenExpiry){showToast('Token মেয়াদ শেষ — পুনরায় Sign In করুন','error');return;}
+  updateFmAccountBar();
   loadFmFolder('root');
   buildFmTree();
 }
 
 function loadFileManager(){
-  if(driveAccounts.length===0){showToast('প্রথমে Settings থেকে Drive সংযুক্ত করুন','error');return;}
-  fmAccessToken=driveAccounts.find(a=>a.accessToken&&Date.now()<a.tokenExpiry)?.accessToken;
-  if(!fmAccessToken){showToast('Drive token মেয়াদ শেষ','error');return;}
-  fmCurrentPath=[{id:'root',name:'My Drive'}];
-  fmCurrentFolderId='root';
-  loadFmFolder('root');
-  buildFmTree();
+  if(driveAccounts.length===0){showToast('Settings থেকে Drive সংযুক্ত করুন','error');return;}
+  fmAccessToken=driveAccounts[fmActiveAcctIdx]?.accessToken;
+  if(!fmAccessToken||Date.now()>=(driveAccounts[fmActiveAcctIdx]?.tokenExpiry||0)){showToast('Token মেয়াদ শেষ','error');return;}
+  fmCurrentPath=[{id:'root',name:'My Drive'}];fmCurrentFolderId='root';
+  loadFmFolder('root');buildFmTree();
+}
+
+function updateFmAccountBar(){
+  // Add account tabs to FM toolbar if multiple accounts
+  if(driveAccounts.length<=1)return;
+  const tb=document.getElementById('fmContainer');if(!tb)return;
+  let bar=document.getElementById('fmAccountBar');
+  if(!bar){
+    bar=document.createElement('div');bar.id='fmAccountBar';
+    bar.style.cssText='display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg3);overflow-x:auto';
+    tb.insertBefore(bar,tb.firstChild);
+  }
+  bar.innerHTML=driveAccounts.map((acc,i)=>`
+    <div onclick="switchFmAccount(${i})" style="display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:20px;cursor:pointer;border:1.5px solid ${i===fmActiveAcctIdx?acc.color:'var(--border)'};background:${i===fmActiveAcctIdx?acc.color+'18':'transparent'};white-space:nowrap;transition:all 0.15s">
+      ${acc.picture?`<img src="${acc.picture}" style="width:18px;height:18px;border-radius:50%">`:`<div style="width:18px;height:18px;border-radius:50%;background:${acc.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${acc.avatar}</div>`}
+      <span style="font-size:11.5px;font-weight:600;color:${i===fmActiveAcctIdx?acc.color:'var(--t2)'}">${acc.email}</span>
+    </div>`).join('');
+}
+
+function switchFmAccount(i){
+  fmActiveAcctIdx=i;fmAccessToken=driveAccounts[i]?.accessToken;
+  if(!fmAccessToken||Date.now()>=(driveAccounts[i]?.tokenExpiry||0)){showToast('Token মেয়াদ শেষ','error');return;}
+  fmCurrentPath=[{id:'root',name:'My Drive'}];fmCurrentFolderId='root';
+  updateFmAccountBar();loadFmFolder('root');buildFmTree();
 }
 
 async function buildFmTree(){
   if(!fmAccessToken)return;
   const treeContent=document.getElementById('fmTreeContent');
-  treeContent.innerHTML='<div style="padding:14px;font-size:12px;color:var(--t3);display:flex;align-items:center;gap:8px"><div class="fm-spinner" style="width:16px;height:16px;border-width:2px"></div>Loading...</div>';
-
+  treeContent.innerHTML='<div style="padding:14px;font-size:12px;color:var(--t3);display:flex;align-items:center;gap:8px"><div class="fm-spinner" style="width:14px;height:14px;border-width:2px"></div>Loading...</div>';
   try{
-    const res=await fetch(`https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name,parents)&pageSize=500&orderBy=name`,
-      {headers:{Authorization:'Bearer '+fmAccessToken}});
-    const data=await res.json();
-    const folders=data.files||[];
-
-    // Build tree structure
-    const tree={};const roots=[];
-    folders.forEach(f=>{tree[f.id]={...f,children:[]};});
-    folders.forEach(f=>{
-      if(f.parents&&f.parents[0]&&tree[f.parents[0]]){tree[f.parents[0]].children.push(tree[f.id]);}
-      else{roots.push(tree[f.id]||f);}
-    });
-    fmFolderTree=tree;
-
-    let html=renderTreeNode({id:'root',name:'My Drive',children:roots},0,true);
-    treeContent.innerHTML=html;
-  }catch(e){treeContent.innerHTML=`<div style="padding:12px;font-size:12px;color:var(--red)">Tree লোড করতে পারেনি</div>`;}
+    const res=await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent("mimeType='application/vnd.google-apps.folder' and trashed=false")}&fields=files(id,name,parents)&pageSize=500&orderBy=name`,{headers:{Authorization:'Bearer '+fmAccessToken}});
+    const data=await res.json();const folders=data.files||[];
+    const tree={};folders.forEach(f=>{tree[f.id]={...f,children:[]};});
+    const roots=[];
+    folders.forEach(f=>{if(f.parents&&f.parents[0]&&tree[f.parents[0]])tree[f.parents[0]].children.push(tree[f.id]);else roots.push(tree[f.id]||f);});
+    treeContent.innerHTML=renderTreeNodes(roots,1);
+  }catch(e){treeContent.innerHTML=`<div style="padding:12px;font-size:12px;color:var(--red)">Error loading tree</div>`;}
 }
 
-function renderTreeNode(node,depth,isRoot=false){
-  const hasChildren=node.children&&node.children.length>0;
-  const isActive=fmCurrentFolderId===node.id;
-  let html=`<div class="fm-tree-node ${isActive?'active':''} ${hasChildren&&!isRoot?'':'expanded'}" style="--depth:${depth}" onclick="fmTreeClick('${node.id}','${node.name.replace(/'/g,"\\'")}')">
-    ${hasChildren?`<span class="expand-btn"><i class="fa-solid fa-chevron-right"></i></span>`:`<span style="width:16px"></span>`}
-    <i class="fa-solid fa-folder" style="color:${isRoot?'#4285f4':'#fbbf24'}"></i>
-    <span class="node-name">${node.name}</span>
-    ${hasChildren?`<span class="node-count">${node.children.length}</span>`:''}
-  </div>`;
-  if(hasChildren){
-    html+=`<div id="tree-children-${node.id}" style="display:${isRoot?'block':'none'}">`;
-    node.children.sort((a,b)=>a.name.localeCompare(b.name)).forEach(child=>{html+=renderTreeNode(child,depth+1);});
-    html+=`</div>`;
-  }
-  return html;
+function renderTreeNodes(nodes,depth){
+  return nodes.sort((a,b)=>a.name.localeCompare(b.name)).map(node=>{
+    const hasC=node.children&&node.children.length>0;
+    const isAct=fmCurrentFolderId===node.id;
+    return`<div class="fm-tree-node ${isAct?'active':''}" style="--depth:${depth}" onclick="fmNavigateTo('${node.id}','${node.name.replace(/'/g,"\\'")}')">
+      ${hasC?`<span style="width:16px;font-size:10px;color:var(--t3)">▶</span>`:'<span style="width:16px"></span>'}
+      <i class="fa-solid fa-folder" style="color:#fbbf24;font-size:12px"></i>
+      <span class="node-name">${node.name}</span>
+      ${hasC?`<span class="node-count">${node.children.length}</span>`:''}
+    </div>${hasC?`<div id="tc-${node.id}" style="display:none">${renderTreeNodes(node.children,depth+1)}</div>`:''}`;
+  }).join('');
 }
 
-function fmTreeClick(id,name){
-  // Toggle expand
-  const childDiv=document.getElementById('tree-children-'+id);
-  if(childDiv){childDiv.style.display=childDiv.style.display==='none'?'block':'none';}
-  // Navigate
-  fmNavigateTo(id,name);
-}
-
-async function loadFmFolder(folderId,folderName){
+async function loadFmFolder(folderId){
   if(!fmAccessToken){initFileManager();return;}
   fmLoading=true;
-  const content=document.getElementById('fmContent');
-  content.innerHTML='<div class="fm-loading"><div class="fm-spinner"></div><span style="font-size:13px;color:var(--t2)">লোড হচ্ছে...</span></div>';
-
+  document.getElementById('fmContent').innerHTML='<div class="fm-loading"><div class="fm-spinner"></div><span style="font-size:13px;color:var(--t2)">লোড হচ্ছে...</span></div>';
   try{
     const parentQ=folderId==='root'?`'root' in parents`:`'${folderId}' in parents`;
     const url=`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(parentQ+' and trashed=false')}&fields=files(id,name,mimeType,size,createdTime,modifiedTime,thumbnailLink,imageMediaMetadata,videoMediaMetadata,webViewLink,parents)&pageSize=1000&orderBy=folder,name`;
     const res=await fetch(url,{headers:{Authorization:'Bearer '+fmAccessToken}});
-    if(!res.ok)throw new Error('API Error: '+res.status);
+    if(!res.ok)throw new Error('API '+res.status);
     const data=await res.json();
     fmItems=data.files||[];
-
-    renderFmContent(fmItems);
-    updateFmStats(fmItems);
-    updateFmPathBar();
-    updateFmTreeActive(folderId);
-  }catch(e){
-    content.innerHTML=`<div class="fm-empty"><i class="fa-solid fa-triangle-exclamation" style="color:var(--red)"></i><h3>লোড করতে পারেনি</h3><p>${e.message}</p></div>`;
-  }
+    renderFmContent(fmItems);updateFmStats(fmItems);updateFmPathBar();
+  }catch(e){document.getElementById('fmContent').innerHTML=`<div class="fm-empty"><i class="fa-solid fa-triangle-exclamation" style="color:var(--red)"></i><h3>Error</h3><p>${e.message}</p></div>`;}
   fmLoading=false;
 }
 
 function renderFmContent(items){
   const content=document.getElementById('fmContent');
   document.getElementById('fmItemCount').textContent=items.length+' items';
-
-  if(items.length===0){content.innerHTML='<div class="fm-empty"><i class="fa-regular fa-folder-open"></i><h3>এই ফোল্ডারটি খালি</h3></div>';return;}
-
+  if(items.length===0){content.innerHTML='<div class="fm-empty"><i class="fa-regular fa-folder-open"></i><h3>খালি ফোল্ডার</h3></div>';return;}
   const folders=items.filter(f=>f.mimeType==='application/vnd.google-apps.folder');
   const files=items.filter(f=>f.mimeType!=='application/vnd.google-apps.folder');
-
   if(fmView==='list'){
-    content.innerHTML=`
-      <div style="display:flex;padding:8px 16px;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);background:var(--bg3);position:sticky;top:0">
-        <span style="flex:1">নাম</span><span style="width:80px;text-align:right">টাইপ</span><span style="width:70px;text-align:right">সাইজ</span><span style="width:90px;text-align:right">তারিখ</span>
-      </div>
-      ${folders.map(f=>makeFmListRow(f,true)).join('')}
-      ${files.map(f=>makeFmListRow(f,false)).join('')}`;
+    content.innerHTML=`<div style="display:flex;padding:8px 16px;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);background:var(--bg3);position:sticky;top:0">
+        <span style="flex:1">নাম</span><span style="width:80px;text-align:right">টাইপ</span><span style="width:70px;text-align:right">সাইজ</span><span style="width:90px;text-align:right">তারিখ</span></div>
+      ${folders.map(f=>makeFmListRow(f,true)).join('')}${files.map(f=>makeFmListRow(f,false)).join('')}`;
   }else{
-    content.innerHTML=`<div class="fm-content-grid">
-      ${folders.map(f=>makeFmGridItem(f,true)).join('')}
-      ${files.map(f=>makeFmGridItem(f,false)).join('')}
-    </div>`;
+    content.innerHTML=`<div class="fm-content-grid">${folders.map(f=>makeFmGridItem(f,true)).join('')}${files.map(f=>makeFmGridItem(f,false)).join('')}</div>`;
   }
 }
 
 function makeFmGridItem(f,isFolder){
   const isImg=f.mimeType.startsWith('image/'),isVid=f.mimeType.startsWith('video/');
   const ext=f.name.split('.').pop().toUpperCase();
-  const folderColor=isFolder?'#fbbf24':'transparent';
   let icon='';
-  if(isFolder){icon=`<i class="fa-solid fa-folder" style="font-size:42px;color:#fbbf24"></i>`;}
-  else if(isImg&&f.thumbnailLink){icon=`<img src="${f.thumbnailLink.replace('=s220','=s120')}" class="fm-item-thumb" alt="${f.name}" loading="lazy">`;}
-  else if(isVid){icon=`<div class="fm-item-thumb-placeholder" style="background:rgba(232,121,249,0.1)"><i class="fa-solid fa-video" style="color:var(--pink);font-size:22px"></i></div>`;}
-  else{icon=`<div class="fm-item-thumb-placeholder"><i class="fa-solid fa-file" style="color:var(--t3);font-size:22px"></i></div>`;}
-
+  if(isFolder)icon=`<i class="fa-solid fa-folder" style="font-size:42px;color:#fbbf24"></i>`;
+  else if(isImg&&f.thumbnailLink)icon=`<img src="${f.thumbnailLink.replace('=s220','=s120')}" class="fm-item-thumb" alt="" loading="lazy">`;
+  else if(isVid)icon=`<div class="fm-item-thumb-placeholder" style="background:rgba(232,121,249,0.1)"><i class="fa-solid fa-video" style="color:var(--pink);font-size:22px"></i></div>`;
+  else{const ic={pdf:'fa-file-pdf',doc:'fa-file-word',xls:'fa-file-excel',mp3:'fa-file-audio',zip:'fa-file-zipper'};const k=Object.keys(ic).find(k=>f.name.endsWith(k));icon=`<div class="fm-item-thumb-placeholder"><i class="fa-solid ${ic[k]||'fa-file'}" style="color:var(--t3);font-size:22px"></i></div>`;}
   const onclick=isFolder?`fmNavigateTo('${f.id}','${f.name.replace(/'/g,"\\'")}')`:
     (isImg||isVid)?`fmOpenFile('${f.id}')`:
-    f.webViewLink?`window.open('${f.webViewLink}','_blank')`:`showToast('ফাইল প্রিভিউ নেই','info')`;
-
-  return`<div class="fm-item" onclick="${onclick}" title="${f.name}">
-    ${icon}
-    <div class="fm-item-name">${f.name}</div>
-    <div class="fm-item-meta">${isFolder?'Folder':ext}${f.size?' · '+(parseInt(f.size)/1048576).toFixed(1)+'MB':''}</div>
-  </div>`;
+    f.webViewLink?`window.open('${f.webViewLink}','_blank')`:`showToast('প্রিভিউ নেই','info')`;
+  return`<div class="fm-item" onclick="${onclick}" title="${f.name}">${icon}<div class="fm-item-name">${f.name}</div><div class="fm-item-meta">${isFolder?'Folder':ext}${f.size?' · '+formatBytes(parseInt(f.size)):''}</div></div>`;
 }
 
 function makeFmListRow(f,isFolder){
   const ext=f.name.split('.').pop().toUpperCase();
   const isImg=f.mimeType.startsWith('image/'),isVid=f.mimeType.startsWith('video/');
-  let iconStyle='';
-  if(isFolder)iconStyle='color:#fbbf24';
-  else if(isImg)iconStyle='color:var(--cyan)';
-  else if(isVid)iconStyle='color:var(--pink)';
-  else iconStyle='color:var(--t3)';
-
-  let iconName=isFolder?'fa-folder':isImg?'fa-image':isVid?'fa-video':'fa-file';
-  const size=f.size?(parseInt(f.size)/1048576).toFixed(1)+' MB':'—';
-  const date=f.createdTime?new Date(f.createdTime).toLocaleDateString('bn-BD',{month:'short',day:'numeric',year:'2-digit'}):'—';
-
+  const ic=isFolder?'fa-folder':isImg?'fa-image':isVid?'fa-video':'fa-file';
+  const col=isFolder?'#fbbf24':isImg?'var(--cyan)':isVid?'var(--pink)':'var(--t3)';
+  const size=f.size?formatBytes(parseInt(f.size)):'—';
+  const date=f.createdTime?new Date(f.createdTime).toLocaleDateString('bn-BD',{month:'short',day:'numeric'}):'—';
   const onclick=isFolder?`fmNavigateTo('${f.id}','${f.name.replace(/'/g,"\\'")}')`:
     (isImg||isVid)?`fmOpenFile('${f.id}')`:
     f.webViewLink?`window.open('${f.webViewLink}','_blank')`:`showToast('প্রিভিউ নেই','info')`;
-
-  let thumbHtml='';
-  if(isImg&&f.thumbnailLink){thumbHtml=`<img src="${f.thumbnailLink.replace('=s220','=s60')}" class="fm-list-thumb" alt="">`;}
-  else{thumbHtml=`<div class="fm-list-icon" style="background:${isFolder?'rgba(251,191,36,0.1)':isImg?'rgba(34,211,238,0.1)':isVid?'rgba(232,121,249,0.1)':'rgba(255,255,255,0.04)'}"><i class="fa-solid ${iconName}" style="${iconStyle}"></i></div>`;}
-
-  return`<div class="fm-list-row" onclick="${onclick}">
-    ${thumbHtml}
-    <div class="fm-list-name">${f.name}</div>
-    <div class="fm-list-type">${isFolder?'Folder':ext}</div>
-    <div class="fm-list-size">${size}</div>
-    <div class="fm-list-date">${date}</div>
-  </div>`;
+  const thumb=isImg&&f.thumbnailLink?`<img src="${f.thumbnailLink.replace('=s220','=s60')}" class="fm-list-thumb">`:`<div class="fm-list-icon" style="background:${col}18"><i class="fa-solid ${ic}" style="color:${col}"></i></div>`;
+  return`<div class="fm-list-row" onclick="${onclick}">${thumb}<div class="fm-list-name">${f.name}</div><div class="fm-list-type">${isFolder?'Folder':ext}</div><div class="fm-list-size">${size}</div><div class="fm-list-date">${date}</div></div>`;
 }
 
 function fmNavigateTo(id,name){
-  // Check if already in path
   const existIdx=fmCurrentPath.findIndex(p=>p.id===id);
-  if(existIdx!==-1){fmCurrentPath=fmCurrentPath.slice(0,existIdx+1);}
-  else{fmCurrentPath.push({id,name});}
-  fmCurrentFolderId=id;
-  loadFmFolder(id,name);
+  if(existIdx!==-1)fmCurrentPath=fmCurrentPath.slice(0,existIdx+1);
+  else fmCurrentPath.push({id,name});
+  fmCurrentFolderId=id;loadFmFolder(id);
 }
-
-function fmGoUp(){
-  if(fmCurrentPath.length<=1)return;
-  fmCurrentPath.pop();
-  const prev=fmCurrentPath[fmCurrentPath.length-1];
-  fmCurrentFolderId=prev.id;
-  loadFmFolder(prev.id,prev.name);
-}
-
-function fmNavigate(id){
-  const found=fmCurrentPath.find(p=>p.id===id);
-  if(found)fmNavigateTo(id,found.name);
-}
-
-function fmOpenFile(driveId){
-  // Find in photos array
-  const p=photos.find(p=>p.driveId===driveId);
-  if(p){const idx=filteredPhotos.indexOf(p);if(idx!==-1){openLightbox(idx);}else{// Not in current filter, show details
-    showFileDetails(null,p.id);}}
-  else{showToast('ফাইলটি Gallery-তে লোড করুন','info');}
-}
+function fmGoUp(){if(fmCurrentPath.length<=1)return;fmCurrentPath.pop();const p=fmCurrentPath[fmCurrentPath.length-1];fmCurrentFolderId=p.id;loadFmFolder(p.id);}
+function fmNavigate(id){const f=fmCurrentPath.find(p=>p.id===id);if(f)fmNavigateTo(id,f.name);}
+function fmOpenFile(driveId){const p=photos.find(p=>p.driveId===driveId);if(p){const idx=filteredPhotos.indexOf(p);if(idx!==-1)openLightbox(idx);else showFileDetails(null,p.id);}else showToast('Gallery-তে লোড করুন','info');}
+function setFmView(v,btn){fmView=v;document.querySelectorAll('.vbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderFmContent(fmItems);}
+function fmSelectAll(){fmItems.forEach(f=>fmItems.add(f.id));showToast(fmItems.length+' items selected','info');}
 
 function updateFmPathBar(){
   const bar=document.getElementById('fmPathBar');
+  const acct=driveAccounts[fmActiveAcctIdx];
   bar.innerHTML=fmCurrentPath.map((p,i)=>{
     const isLast=i===fmCurrentPath.length-1;
-    return`${i>0?'<span class="fm-path-sep">/</span>':''}<div class="fm-path-item ${isLast?'':''}">
-      ${i===0?'<i class="fa-brands fa-google-drive" style="color:#4285f4"></i>':'<i class="fa-solid fa-folder" style="color:#fbbf24;font-size:11px"></i>'}
-      <span onclick="fmNavigateTo('${p.id}','${p.name.replace(/'/g,"\\'")}')" ${!isLast?'style="color:var(--a3);cursor:pointer"':''}>${p.name}</span>
-    </div>`;
+    return`${i>0?'<span class="fm-path-sep">/</span>':''}<div class="fm-path-item">${i===0?`<i class="fa-brands fa-google-drive" style="color:${acct?.color||'#4285f4'}"></i>`:'<i class="fa-solid fa-folder" style="color:#fbbf24;font-size:11px"></i>'}<span onclick="fmNavigateTo('${p.id}','${p.name.replace(/'/g,"\\'")}');" ${!isLast?'style="color:var(--a3);cursor:pointer"':''}>${p.name}</span></div>`;
   }).join('');
 }
 
@@ -1975,31 +2104,15 @@ function updateFmStats(items){
   const totalSize=items.reduce((acc,f)=>acc+parseInt(f.size||0),0);
   document.getElementById('fmFolderCount').textContent=folders;
   document.getElementById('fmFileCount').textContent=files;
-  document.getElementById('fmTotalSize').textContent=totalSize>1048576?(totalSize/1073741824).toFixed(2)+' GB':(totalSize/1048576).toFixed(1)+' MB';
-}
-
-function updateFmTreeActive(activeId){
-  document.querySelectorAll('.fm-tree-node').forEach(n=>{
-    n.classList.toggle('active',n.getAttribute('onclick')||''.includes(activeId));
-  });
-}
-
-function setFmView(v,btn){
-  fmView=v;
-  document.querySelectorAll('.vbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-  renderFmContent(fmItems);
-}
-
-function fmSelectAll(){
-  fmItems.forEach(f=>fmSelectedItems.add(f.id));
-  showToast(fmItems.length+' items selected','info');
+  document.getElementById('fmTotalSize').textContent=formatBytes(totalSize);
 }
 
 // ══ INIT ══
-renderPhotos();
-renderAlbums();
-updateStats();
-initDriveUI();
+const _style=document.createElement('style');
+_style.textContent='@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}';
+document.head.appendChild(_style);
+renderPhotos();renderAlbums();updateStats();initDriveUI();
+
 </script>
 </body>
 </html>

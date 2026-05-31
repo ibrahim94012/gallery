@@ -1197,30 +1197,47 @@ async function loadThumbForEl(imgEl,driveId,acctIdx){
     imgEl.style.opacity='1';
     return;
   }
-  // Already fetching
+  // Already fetching — poll
   if(thumbQueue.has(driveId)){
-    // Poll until ready
-    const wait=()=>setTimeout(()=>{if(thumbCache.has(driveId)){imgEl.src=thumbCache.get(driveId);imgEl.style.opacity='1';}else wait();},300);
+    const wait=()=>setTimeout(()=>{
+      if(thumbCache.has(driveId)){imgEl.src=thumbCache.get(driveId);imgEl.style.opacity='1';}
+      else if(thumbQueue.has(driveId))wait();
+      else showPlaceholderOnImg(imgEl);
+    },300);
     wait();return;
   }
   thumbQueue.add(driveId);
   const acct=driveAccounts[acctIdx];
-  if(!acct?.accessToken||Date.now()>=acct.tokenExpiry){thumbQueue.delete(driveId);showPlaceholderOnImg(imgEl);return;}
+  if(!acct?.accessToken||Date.now()>=acct.tokenExpiry){
+    thumbQueue.delete(driveId);showPlaceholderOnImg(imgEl);return;
+  }
+  const token=acct.accessToken;
+  // Find the photo to get its thumbnailLink
+  const photo=photos.find(p=>p.driveId===driveId);
   try{
-    // Use Drive API to fetch the actual image bytes (thumbnail size)
-    const url=`https://www.googleapis.com/drive/v3/files/${driveId}?alt=media&fields=id`;
-    // For thumbnails we use the thumbnail endpoint with auth
-    const thumbUrl=`https://lh3.googleusercontent.com/d/${driveId}=s400`;
-    // First try the lh3 URL (often works), fallback to Drive API
-    const res=await fetch(thumbUrl,{headers:{Authorization:'Bearer '+acct.accessToken}});
-    if(!res.ok)throw new Error(res.status);
-    const blob=await res.blob();
-    const blobUrl=URL.createObjectURL(blob);
+    let blobUrl;
+    if(photo?.driveThumbUrl){
+      // Fetch the thumbnailLink URL with auth — largest available size
+      const thumbUrl=photo.driveThumbUrl.replace(/=s\d+$/,'=s600');
+      const res=await fetch(thumbUrl,{headers:{Authorization:'Bearer '+token}});
+      if(res.ok){
+        const blob=await res.blob();
+        blobUrl=URL.createObjectURL(blob);
+      }
+    }
+    // Fallback: Drive API alt=media (full file — only if no thumbnailLink)
+    if(!blobUrl){
+      const res=await fetch(
+        `https://www.googleapis.com/drive/v3/files/${driveId}?alt=media`,
+        {headers:{Authorization:'Bearer '+token}}
+      );
+      if(!res.ok)throw new Error(res.status);
+      const blob=await res.blob();
+      blobUrl=URL.createObjectURL(blob);
+    }
     thumbCache.set(driveId,blobUrl);
     thumbQueue.delete(driveId);
     if(imgEl.isConnected){imgEl.src=blobUrl;imgEl.style.opacity='1';}
-    // Also update the photo object so lightbox works
-    const photo=photos.find(p=>p.driveId===driveId);
     if(photo)photo.thumb=blobUrl;
   }catch(e){
     thumbQueue.delete(driveId);
@@ -1507,11 +1524,23 @@ function showLbPhoto(){
     if(acct?.accessToken&&Date.now()<acct.tokenExpiry){
       (async()=>{
         try{
-          const lhUrl=`https://lh3.googleusercontent.com/d/${driveId}=s1600`;
-          const res=await fetch(lhUrl,{headers:{Authorization:'Bearer '+acct.accessToken}});
-          if(!res.ok)throw new Error(res.status);
-          const blob=await res.blob();
-          const blobUrl=URL.createObjectURL(blob);
+          let blobUrl;
+          // Try thumbnailLink first (fast, small)
+          if(p.driveThumbUrl){
+            const thumbUrl=p.driveThumbUrl.replace(/=s\d+$/,'=s1600');
+            const r=await fetch(thumbUrl,{headers:{Authorization:'Bearer '+acct.accessToken}});
+            if(r.ok){const b=await r.blob();blobUrl=URL.createObjectURL(b);}
+          }
+          // Fallback: full file via alt=media
+          if(!blobUrl){
+            const r=await fetch(
+              `https://www.googleapis.com/drive/v3/files/${driveId}?alt=media`,
+              {headers:{Authorization:'Bearer '+acct.accessToken}}
+            );
+            if(!r.ok)throw new Error(r.status);
+            const b=await r.blob();blobUrl=URL.createObjectURL(b);
+          }
+          if(!blobUrl)throw new Error('fetch failed');
           p.thumb=blobUrl;
           thumbCache.set(driveId,blobUrl);
           // Update grid card if visible
@@ -1747,6 +1776,7 @@ async function loadAllDrivePhotos(accessToken,accountIdx){
           emoji:isVid?'🎬':'🖼️',
           thumb:null,
           driveThumbId:f.id,
+          driveThumbUrl:f.thumbnailLink||null,
           fromDrive:true,accountIdx,parentId:f.parents?.[0]||null,
         };
       });
@@ -2166,12 +2196,23 @@ function renderFmContent(items){
         if(thumbCache.has(driveId)){el.src=thumbCache.get(driveId);el.style.opacity='1';return;}
         (async()=>{
           try{
-            const res=await fetch(`https://lh3.googleusercontent.com/d/${driveId}=s200`,{headers:{Authorization:'Bearer '+fmAccessToken}});
-            if(!res.ok)throw new Error(res.status);
-            const blob=await res.blob();
-            const url=URL.createObjectURL(blob);
-            thumbCache.set(driveId,url);
-            if(el.isConnected){el.src=url;el.style.opacity='1';}
+            const fmFile=fmItems.find(f=>f.id===driveId);
+            let blobUrl;
+            if(fmFile?.thumbnailLink){
+              const thumbUrl=fmFile.thumbnailLink.replace(/=s\d+$/,'=s300');
+              const r=await fetch(thumbUrl,{headers:{Authorization:'Bearer '+fmAccessToken}});
+              if(r.ok){const b=await r.blob();blobUrl=URL.createObjectURL(b);}
+            }
+            if(!blobUrl){
+              const r=await fetch(
+                `https://www.googleapis.com/drive/v3/files/${driveId}?alt=media`,
+                {headers:{Authorization:'Bearer '+fmAccessToken}}
+              );
+              if(!r.ok)throw new Error(r.status);
+              const b=await r.blob();blobUrl=URL.createObjectURL(b);
+            }
+            thumbCache.set(driveId,blobUrl);
+            if(el.isConnected){el.src=blobUrl;el.style.opacity='1';}
           }catch{
             if(el.isConnected)el.outerHTML=`<div class="fm-item-thumb-placeholder"><i class="fa-solid fa-image" style="color:var(--t3);font-size:18px"></i></div>`;
           }

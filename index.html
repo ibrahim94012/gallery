@@ -1173,6 +1173,70 @@ let currentPage    = 1;
 const PAGE_SIZE    = 50;
 const COLORS       = ['#6d5cff','#a78bfa','#22d3ee','#10b981','#fbbf24','#f472b6','#34d399','#60a5fa'];
 
+// ══ THUMBNAIL BLOB CACHE ══
+// Drive thumbnailLink returns 403 when used directly in <img src>.
+// We fetch thumbnails with the Bearer token and convert to blob: URLs.
+const thumbCache = new Map();   // driveId → blob URL  (in-memory only)
+const thumbQueue = new Set();   // driveIds currently being fetched
+const thumbObserver = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(!entry.isIntersecting)return;
+    const el=entry.target;
+    const driveId=el.dataset.driveId;
+    const acctIdx=parseInt(el.dataset.acctIdx||'0');
+    if(!driveId)return;
+    thumbObserver.unobserve(el);
+    loadThumbForEl(el,driveId,acctIdx);
+  });
+},{rootMargin:'200px'});
+
+async function loadThumbForEl(imgEl,driveId,acctIdx){
+  // Already cached
+  if(thumbCache.has(driveId)){
+    imgEl.src=thumbCache.get(driveId);
+    imgEl.style.opacity='1';
+    return;
+  }
+  // Already fetching
+  if(thumbQueue.has(driveId)){
+    // Poll until ready
+    const wait=()=>setTimeout(()=>{if(thumbCache.has(driveId)){imgEl.src=thumbCache.get(driveId);imgEl.style.opacity='1';}else wait();},300);
+    wait();return;
+  }
+  thumbQueue.add(driveId);
+  const acct=driveAccounts[acctIdx];
+  if(!acct?.accessToken||Date.now()>=acct.tokenExpiry){thumbQueue.delete(driveId);showPlaceholderOnImg(imgEl);return;}
+  try{
+    // Use Drive API to fetch the actual image bytes (thumbnail size)
+    const url=`https://www.googleapis.com/drive/v3/files/${driveId}?alt=media&fields=id`;
+    // For thumbnails we use the thumbnail endpoint with auth
+    const thumbUrl=`https://lh3.googleusercontent.com/d/${driveId}=s400`;
+    // First try the lh3 URL (often works), fallback to Drive API
+    const res=await fetch(thumbUrl,{headers:{Authorization:'Bearer '+acct.accessToken}});
+    if(!res.ok)throw new Error(res.status);
+    const blob=await res.blob();
+    const blobUrl=URL.createObjectURL(blob);
+    thumbCache.set(driveId,blobUrl);
+    thumbQueue.delete(driveId);
+    if(imgEl.isConnected){imgEl.src=blobUrl;imgEl.style.opacity='1';}
+    // Also update the photo object so lightbox works
+    const photo=photos.find(p=>p.driveId===driveId);
+    if(photo)photo.thumb=blobUrl;
+  }catch(e){
+    thumbQueue.delete(driveId);
+    showPlaceholderOnImg(imgEl);
+  }
+}
+
+function showPlaceholderOnImg(imgEl){
+  const card=imgEl.closest('.photo-card');
+  if(!card)return;
+  const p=photos.find(p=>p.driveId===imgEl.dataset.driveId);
+  const emoji=p?.emoji||'🖼️';
+  const name=p?.name||'';
+  imgEl.outerHTML=`<div class="photo-thumb-placeholder"><span style="font-size:34px">${emoji}</span><span style="font-size:10px;color:var(--t3);margin-top:4px">${name.length>18?name.slice(0,16)+'…':name}</span></div>`;
+}
+
 // Multiple Drive accounts
 let driveAccounts  = JSON.parse(localStorage.getItem('dg_driveAccounts')||'[]');
 const ACCT_COLORS  = ['#4285f4','#10b981','#fbbf24','#f472b6','#6d5cff','#22d3ee'];
@@ -1302,6 +1366,8 @@ function renderPhotos(){
   const frag=document.createDocumentFragment();
   for(let i=start;i<end;i++){const d=document.createElement('div');d.innerHTML=makePhotoCard(filteredPhotos[i],i);frag.appendChild(d.firstChild);}
   grid.appendChild(frag);
+  // Attach lazy thumb observer to all Drive images
+  grid.querySelectorAll('.drive-lazy-thumb').forEach(img=>thumbObserver.observe(img));
   renderPagination(currentPage,totalPages);
   const pb=document.getElementById('paginationInfo');
   if(pb){pb.style.display='block';pb.innerHTML=`দেখাচ্ছে <strong>${start+1}–${end}</strong> / মোট <strong>${filteredPhotos.length}</strong>টি`;}
@@ -1310,10 +1376,16 @@ function renderPhotos(){
 function makePhotoCard(p,idx){
   const sel=selectedItems.has(String(p.id)),isVideo=p.type==='video';
   const ext=p.name.split('.').pop().toUpperCase();
-  const fallbackHtml=`<div class='photo-thumb-placeholder'><span style='font-size:34px'>${p.emoji||(isVideo?'🎬':'🖼️')}</span><span style='font-size:10px;color:var(--t3);margin-top:4px'>${p.name.length>18?p.name.slice(0,16)+'…':p.name}</span></div>`;
-  const thumb=p.thumb
-    ?`<img src="${p.thumb}" class="photo-thumb" alt="${p.name}" loading="lazy" decoding="async" onerror="this.outerHTML=\`${fallbackHtml.replace(/`/g,"'")}\`">`
-    :`<div class="photo-thumb-placeholder"><span style="font-size:34px">${p.emoji||(isVideo?'🎬':'🖼️')}</span><span style="font-size:10px;color:var(--t3);margin-top:4px">${p.name.length>18?p.name.slice(0,16)+'…':p.name}</span></div>`;
+  let thumb;
+  if(p.thumb){
+    // Already have blob URL (cached)
+    thumb=`<img src="${p.thumb}" class="photo-thumb" alt="${p.name}" loading="lazy" decoding="async">`;
+  } else if(p.driveThumbId){
+    // Drive file — use lazy authenticated loader
+    thumb=`<img class="photo-thumb drive-lazy-thumb" data-drive-id="${p.driveThumbId}" data-acct-idx="${p.accountIdx||0}" alt="${p.name}" style="opacity:0;background:var(--bg3);">`;
+  } else {
+    thumb=`<div class="photo-thumb-placeholder"><span style="font-size:34px">${p.emoji||(isVideo?'🎬':'🖼️')}</span><span style="font-size:10px;color:var(--t3);margin-top:4px">${p.name.length>18?p.name.slice(0,16)+'…':p.name}</span></div>`;
+  }
   const accountDot = p.accountIdx !== undefined ? `<div style="position:absolute;bottom:4px;left:4px;z-index:3;width:10px;height:10px;border-radius:50%;background:${ACCT_COLORS[p.accountIdx%ACCT_COLORS.length]};border:1.5px solid rgba(0,0,0,0.5)" title="${driveAccounts[p.accountIdx]?.email||''}"></div>` : '';
   return `<div class="photo-card ${sel?'selected':''}" id="card-${p.id}">
     <div class="select-check" onclick="toggleSelect(event,'${p.id}')">${sel?'<i class="fa-solid fa-check"></i>':''}</div>
@@ -1416,14 +1488,48 @@ function openLightbox(idx){currentLbIndex=idx;showLbPhoto();document.getElementB
 function showLbPhoto(){
   const p=filteredPhotos[currentLbIndex];if(!p)return;
   const wrap=document.getElementById('lbImgWrap');
-  if(p.thumb){wrap.innerHTML=`<img src="${p.thumb}" style="max-width:90vw;max-height:72vh;object-fit:contain;border-radius:10px" alt="${p.name}" onerror="this.outerHTML='<div style=\\'width:min(80vw,600px);height:60vh;background:linear-gradient(135deg,var(--bg3),var(--bg4));border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px\\'><span style=\\'font-size:80px\\'>${p.emoji||'🖼️'}</span><span style=\\'color:rgba(255,255,255,0.5);font-size:13px\\'>ছবি লোড হয়নি</span></div>'">`;}
-  else{wrap.innerHTML=`<div style="width:min(80vw,600px);height:60vh;background:linear-gradient(135deg,var(--bg3),var(--bg4));border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px"><span style="font-size:80px">${p.emoji||'🖼️'}</span><span style="color:rgba(255,255,255,0.4);font-size:14px">${p.type==='video'?'Video':'Image'}</span></div>`;}
-  document.getElementById('lbName').textContent=p.name;
-  document.getElementById('lbSize').textContent=p.size;
-  document.getElementById('lbDate').textContent=new Date(p.date).toLocaleDateString();
-  document.getElementById('lbStar').className=p.starred?'fa-solid fa-star':'fa-regular fa-star';
-  document.getElementById('lbStar').style.color=p.starred?'var(--gold)':'';
-  document.getElementById('lbStarTxt').textContent=p.starred?'Unstar':'Star';
+  const meta=()=>{
+    document.getElementById('lbName').textContent=p.name;
+    document.getElementById('lbSize').textContent=p.size;
+    document.getElementById('lbDate').textContent=new Date(p.date).toLocaleDateString();
+    document.getElementById('lbStar').className=p.starred?'fa-solid fa-star':'fa-regular fa-star';
+    document.getElementById('lbStar').style.color=p.starred?'var(--gold)':'';
+    document.getElementById('lbStarTxt').textContent=p.starred?'Unstar':'Star';
+  };
+  meta();
+  if(p.thumb){
+    wrap.innerHTML=`<img src="${p.thumb}" style="max-width:90vw;max-height:72vh;object-fit:contain;border-radius:10px" alt="${p.name}">`;
+  } else if(p.driveThumbId){
+    // Show spinner, then fetch with auth
+    wrap.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:16px"><div class="fm-spinner" style="width:48px;height:48px;border-width:4px"></div><span style="color:rgba(255,255,255,0.4);font-size:13px">লোড হচ্ছে...</span></div>`;
+    const driveId=p.driveThumbId;
+    const acct=driveAccounts[p.accountIdx||0];
+    if(acct?.accessToken&&Date.now()<acct.tokenExpiry){
+      (async()=>{
+        try{
+          const lhUrl=`https://lh3.googleusercontent.com/d/${driveId}=s1600`;
+          const res=await fetch(lhUrl,{headers:{Authorization:'Bearer '+acct.accessToken}});
+          if(!res.ok)throw new Error(res.status);
+          const blob=await res.blob();
+          const blobUrl=URL.createObjectURL(blob);
+          p.thumb=blobUrl;
+          thumbCache.set(driveId,blobUrl);
+          // Update grid card if visible
+          const cardImg=document.querySelector(`.drive-lazy-thumb[data-drive-id="${driveId}"]`);
+          if(cardImg){cardImg.src=blobUrl;cardImg.style.opacity='1';}
+          if(document.getElementById('lightbox').classList.contains('open')&&filteredPhotos[currentLbIndex]?.driveThumbId===driveId){
+            wrap.innerHTML=`<img src="${blobUrl}" style="max-width:90vw;max-height:72vh;object-fit:contain;border-radius:10px" alt="${p.name}">`;
+          }
+        }catch{
+          wrap.innerHTML=`<div style="width:min(80vw,600px);height:60vh;background:linear-gradient(135deg,var(--bg3),var(--bg4));border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px"><span style="font-size:80px">${p.emoji||'🖼️'}</span><span style="color:rgba(255,255,255,0.4);font-size:13px">ছবি লোড হয়নি</span></div>`;
+        }
+      })();
+    }else{
+      wrap.innerHTML=`<div style="width:min(80vw,600px);height:60vh;background:linear-gradient(135deg,var(--bg3),var(--bg4));border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px"><span style="font-size:80px">${p.emoji||'🖼️'}</span><span style="color:rgba(255,255,255,0.4);font-size:13px">Token মেয়াদ শেষ</span></div>`;
+    }
+  } else {
+    wrap.innerHTML=`<div style="width:min(80vw,600px);height:60vh;background:linear-gradient(135deg,var(--bg3),var(--bg4));border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px"><span style="font-size:80px">${p.emoji||'🖼️'}</span><span style="color:rgba(255,255,255,0.4);font-size:14px">${p.type==='video'?'Video':'Image'}</span></div>`;
+  }
 }
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
 function lbNavigate(dir){currentLbIndex=(currentLbIndex+dir+filteredPhotos.length)%filteredPhotos.length;showLbPhoto();}
@@ -1639,7 +1745,8 @@ async function loadAllDrivePhotos(accessToken,accountIdx){
           duration:f.videoMediaMetadata?.durationMillis||null,
           starred:false,color:COLORS[(totalLoaded+i)%COLORS.length],
           emoji:isVid?'🎬':'🖼️',
-          thumb:f.thumbnailLink?f.thumbnailLink.replace('=s220','=s400'):null,
+          thumb:null,
+          driveThumbId:f.id,
           fromDrive:true,accountIdx,parentId:f.parents?.[0]||null,
         };
       });
@@ -2048,6 +2155,31 @@ function renderFmContent(items){
   }else{
     content.innerHTML=`<div class="fm-content-grid">${folders.map(f=>makeFmGridItem(f,true)).join('')}${files.map(f=>makeFmGridItem(f,false)).join('')}</div>`;
   }
+  // Attach lazy observer for FM thumbnails
+  content.querySelectorAll('.fm-lazy-thumb').forEach(img=>{
+    const fmObs=new IntersectionObserver((entries,obs)=>{
+      entries.forEach(entry=>{
+        if(!entry.isIntersecting)return;
+        obs.unobserve(entry.target);
+        const el=entry.target;const driveId=el.dataset.driveId;
+        if(!driveId||!fmAccessToken)return;
+        if(thumbCache.has(driveId)){el.src=thumbCache.get(driveId);el.style.opacity='1';return;}
+        (async()=>{
+          try{
+            const res=await fetch(`https://lh3.googleusercontent.com/d/${driveId}=s200`,{headers:{Authorization:'Bearer '+fmAccessToken}});
+            if(!res.ok)throw new Error(res.status);
+            const blob=await res.blob();
+            const url=URL.createObjectURL(blob);
+            thumbCache.set(driveId,url);
+            if(el.isConnected){el.src=url;el.style.opacity='1';}
+          }catch{
+            if(el.isConnected)el.outerHTML=`<div class="fm-item-thumb-placeholder"><i class="fa-solid fa-image" style="color:var(--t3);font-size:18px"></i></div>`;
+          }
+        })();
+      });
+    },{rootMargin:'150px'});
+    fmObs.observe(img);
+  });
 }
 
 function makeFmGridItem(f,isFolder){
@@ -2055,7 +2187,12 @@ function makeFmGridItem(f,isFolder){
   const ext=f.name.split('.').pop().toUpperCase();
   let icon='';
   if(isFolder)icon=`<i class="fa-solid fa-folder" style="font-size:42px;color:#fbbf24"></i>`;
-  else if(isImg&&f.thumbnailLink)icon=`<img src="${f.thumbnailLink.replace('=s220','=s120')}" class="fm-item-thumb" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'fm-item-thumb-placeholder\\'><i class=\\'fa-solid fa-image\\' style=\\'color:var(--cyan);font-size:22px\\'></i></div>'">`;
+  else if(isImg){
+    const cached=thumbCache.get(f.id);
+    icon=cached
+      ?`<img src="${cached}" class="fm-item-thumb" alt="">`
+      :`<img class="fm-item-thumb fm-lazy-thumb" data-drive-id="${f.id}" alt="" style="opacity:0;background:var(--bg4)">`;
+  }
   else if(isVid)icon=`<div class="fm-item-thumb-placeholder" style="background:rgba(232,121,249,0.1)"><i class="fa-solid fa-video" style="color:var(--pink);font-size:22px"></i></div>`;
   else{const ic={pdf:'fa-file-pdf',doc:'fa-file-word',xls:'fa-file-excel',mp3:'fa-file-audio',zip:'fa-file-zipper'};const k=Object.keys(ic).find(k=>f.name.endsWith(k));icon=`<div class="fm-item-thumb-placeholder"><i class="fa-solid ${ic[k]||'fa-file'}" style="color:var(--t3);font-size:22px"></i></div>`;}
   const onclick=isFolder?`fmNavigateTo('${f.id}','${f.name.replace(/'/g,"\\'")}')`:
@@ -2074,7 +2211,15 @@ function makeFmListRow(f,isFolder){
   const onclick=isFolder?`fmNavigateTo('${f.id}','${f.name.replace(/'/g,"\\'")}')`:
     (isImg||isVid)?`fmOpenFile('${f.id}')`:
     f.webViewLink?`window.open('${f.webViewLink}','_blank')`:`showToast('প্রিভিউ নেই','info')`;
-  const thumb=isImg&&f.thumbnailLink?`<img src="${f.thumbnailLink.replace('=s220','=s60')}" class="fm-list-thumb" onerror="this.outerHTML='<div class=\\'fm-list-icon\\' style=\\'background:${col}18\\'><i class=\\'fa-solid ${ic}\\' style=\\'color:${col}\\'></i></div>'">`:`<div class="fm-list-icon" style="background:${col}18"><i class="fa-solid ${ic}" style="color:${col}"></i></div>`;
+  let thumb;
+  if(isImg){
+    const cached=thumbCache.get(f.id);
+    thumb=cached
+      ?`<img src="${cached}" class="fm-list-thumb">`
+      :`<img class="fm-list-thumb fm-lazy-thumb" data-drive-id="${f.id}" alt="" style="opacity:0;background:var(--bg4)">`;
+  } else {
+    thumb=`<div class="fm-list-icon" style="background:${col}18"><i class="fa-solid ${ic}" style="color:${col}"></i></div>`;
+  }
   return`<div class="fm-list-row" onclick="${onclick}">${thumb}<div class="fm-list-name">${f.name}</div><div class="fm-list-type">${isFolder?'Folder':ext}</div><div class="fm-list-size">${size}</div><div class="fm-list-date">${date}</div></div>`;
 }
 

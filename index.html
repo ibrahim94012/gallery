@@ -304,7 +304,7 @@ body::before{
 .photo-card:hover{border-color:rgba(109,92,255,0.4);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.4),0 0 0 1px rgba(109,92,255,0.1);}
 .photo-card.selected{border-color:var(--a1);box-shadow:0 0 0 2px rgba(109,92,255,0.35);}
 
-.photo-thumb{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--bg3);}
+.photo-thumb{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--bg3);min-height:80px;}
 .photo-thumb-placeholder{
   width:100%;aspect-ratio:1;
   background:linear-gradient(135deg,var(--bg3),var(--bg4));
@@ -1310,9 +1310,10 @@ function renderPhotos(){
 function makePhotoCard(p,idx){
   const sel=selectedItems.has(String(p.id)),isVideo=p.type==='video';
   const ext=p.name.split('.').pop().toUpperCase();
+  const fallbackHtml=`<div class='photo-thumb-placeholder'><span style='font-size:34px'>${p.emoji||(isVideo?'🎬':'🖼️')}</span><span style='font-size:10px;color:var(--t3);margin-top:4px'>${p.name.length>18?p.name.slice(0,16)+'…':p.name}</span></div>`;
   const thumb=p.thumb
-    ?`<img src="${p.thumb}" class="photo-thumb" alt="${p.name}" loading="lazy" decoding="async">`
-    :`<div class="photo-thumb-placeholder"><span style="font-size:34px">${p.emoji||(isVideo?'🎬':'🖼️')}</span></div>`;
+    ?`<img src="${p.thumb}" class="photo-thumb" alt="${p.name}" loading="lazy" decoding="async" onerror="this.outerHTML=\`${fallbackHtml.replace(/`/g,"'")}\`">`
+    :`<div class="photo-thumb-placeholder"><span style="font-size:34px">${p.emoji||(isVideo?'🎬':'🖼️')}</span><span style="font-size:10px;color:var(--t3);margin-top:4px">${p.name.length>18?p.name.slice(0,16)+'…':p.name}</span></div>`;
   const accountDot = p.accountIdx !== undefined ? `<div style="position:absolute;bottom:4px;left:4px;z-index:3;width:10px;height:10px;border-radius:50%;background:${ACCT_COLORS[p.accountIdx%ACCT_COLORS.length]};border:1.5px solid rgba(0,0,0,0.5)" title="${driveAccounts[p.accountIdx]?.email||''}"></div>` : '';
   return `<div class="photo-card ${sel?'selected':''}" id="card-${p.id}">
     <div class="select-check" onclick="toggleSelect(event,'${p.id}')">${sel?'<i class="fa-solid fa-check"></i>':''}</div>
@@ -1388,7 +1389,7 @@ function showFileDetails(e,id){
   const dateStr=new Date(p.date).toLocaleString('bn-BD',{dateStyle:'long',timeStyle:'short'});
   const res=(p.width&&p.height)?`${p.width}×${p.height}px`:'—';
   const dur=p.duration?`${Math.floor(p.duration/60000)}m ${Math.round((p.duration%60000)/1000)}s`:'—';
-  const hero=p.thumb?`<img src="${p.thumb}" style="max-width:100%;max-height:240px;object-fit:contain">`:`<div class="fd-hero-placeholder"><span style="font-size:72px">${p.emoji||(isVideo?'🎬':'🖼️')}</span></div>`;
+  const hero=p.thumb?`<img src="${p.thumb}" style="max-width:100%;max-height:240px;object-fit:contain" onerror="this.outerHTML='<div class=\\'fd-hero-placeholder\\'><span style=\\'font-size:72px\\'>${p.emoji||(isVideo?'🎬':'🖼️')}</span><span style=\\'color:var(--t3);font-size:12px\\'>ছবি লোড হয়নি</span></div>'">`:`<div class="fd-hero-placeholder"><span style="font-size:72px">${p.emoji||(isVideo?'🎬':'🖼️')}</span></div>`;
   const acctInfo=fromDrive&&p.accountIdx!==undefined?driveAccounts[p.accountIdx]?.email||'Drive':'—';
   const tags=`<span class="type-tag ${isVideo?'tag-vid':'tag-img'}"><i class="fa-solid fa-${isVideo?'video':'image'}"></i> ${isVideo?'VIDEO':'IMAGE'}</span>${fromDrive?`<span class="type-tag tag-drive"><i class="fa-brands fa-google-drive"></i> Google Drive</span>`:''}${p.starred?'<span class="type-tag tag-star"><i class="fa-solid fa-star"></i> Starred</span>':''}`;
   const meta=[
@@ -1415,7 +1416,7 @@ function openLightbox(idx){currentLbIndex=idx;showLbPhoto();document.getElementB
 function showLbPhoto(){
   const p=filteredPhotos[currentLbIndex];if(!p)return;
   const wrap=document.getElementById('lbImgWrap');
-  if(p.thumb){wrap.innerHTML=`<img src="${p.thumb}" style="max-width:90vw;max-height:72vh;object-fit:contain;border-radius:10px" alt="${p.name}">`;}
+  if(p.thumb){wrap.innerHTML=`<img src="${p.thumb}" style="max-width:90vw;max-height:72vh;object-fit:contain;border-radius:10px" alt="${p.name}" onerror="this.outerHTML='<div style=\\'width:min(80vw,600px);height:60vh;background:linear-gradient(135deg,var(--bg3),var(--bg4));border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px\\'><span style=\\'font-size:80px\\'>${p.emoji||'🖼️'}</span><span style=\\'color:rgba(255,255,255,0.5);font-size:13px\\'>ছবি লোড হয়নি</span></div>'">`;}
   else{wrap.innerHTML=`<div style="width:min(80vw,600px);height:60vh;background:linear-gradient(135deg,var(--bg3),var(--bg4));border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px"><span style="font-size:80px">${p.emoji||'🖼️'}</span><span style="color:rgba(255,255,255,0.4);font-size:14px">${p.type==='video'?'Video':'Image'}</span></div>`;}
   document.getElementById('lbName').textContent=p.name;
   document.getElementById('lbSize').textContent=p.size;
@@ -2054,7 +2055,7 @@ function makeFmGridItem(f,isFolder){
   const ext=f.name.split('.').pop().toUpperCase();
   let icon='';
   if(isFolder)icon=`<i class="fa-solid fa-folder" style="font-size:42px;color:#fbbf24"></i>`;
-  else if(isImg&&f.thumbnailLink)icon=`<img src="${f.thumbnailLink.replace('=s220','=s120')}" class="fm-item-thumb" alt="" loading="lazy">`;
+  else if(isImg&&f.thumbnailLink)icon=`<img src="${f.thumbnailLink.replace('=s220','=s120')}" class="fm-item-thumb" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'fm-item-thumb-placeholder\\'><i class=\\'fa-solid fa-image\\' style=\\'color:var(--cyan);font-size:22px\\'></i></div>'">`;
   else if(isVid)icon=`<div class="fm-item-thumb-placeholder" style="background:rgba(232,121,249,0.1)"><i class="fa-solid fa-video" style="color:var(--pink);font-size:22px"></i></div>`;
   else{const ic={pdf:'fa-file-pdf',doc:'fa-file-word',xls:'fa-file-excel',mp3:'fa-file-audio',zip:'fa-file-zipper'};const k=Object.keys(ic).find(k=>f.name.endsWith(k));icon=`<div class="fm-item-thumb-placeholder"><i class="fa-solid ${ic[k]||'fa-file'}" style="color:var(--t3);font-size:22px"></i></div>`;}
   const onclick=isFolder?`fmNavigateTo('${f.id}','${f.name.replace(/'/g,"\\'")}')`:
@@ -2073,7 +2074,7 @@ function makeFmListRow(f,isFolder){
   const onclick=isFolder?`fmNavigateTo('${f.id}','${f.name.replace(/'/g,"\\'")}')`:
     (isImg||isVid)?`fmOpenFile('${f.id}')`:
     f.webViewLink?`window.open('${f.webViewLink}','_blank')`:`showToast('প্রিভিউ নেই','info')`;
-  const thumb=isImg&&f.thumbnailLink?`<img src="${f.thumbnailLink.replace('=s220','=s60')}" class="fm-list-thumb">`:`<div class="fm-list-icon" style="background:${col}18"><i class="fa-solid ${ic}" style="color:${col}"></i></div>`;
+  const thumb=isImg&&f.thumbnailLink?`<img src="${f.thumbnailLink.replace('=s220','=s60')}" class="fm-list-thumb" onerror="this.outerHTML='<div class=\\'fm-list-icon\\' style=\\'background:${col}18\\'><i class=\\'fa-solid ${ic}\\' style=\\'color:${col}\\'></i></div>'">`:`<div class="fm-list-icon" style="background:${col}18"><i class="fa-solid ${ic}" style="color:${col}"></i></div>`;
   return`<div class="fm-list-row" onclick="${onclick}">${thumb}<div class="fm-list-name">${f.name}</div><div class="fm-list-type">${isFolder?'Folder':ext}</div><div class="fm-list-size">${size}</div><div class="fm-list-date">${date}</div></div>`;
 }
 

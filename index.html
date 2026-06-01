@@ -299,7 +299,7 @@ body::before{
 .photo-card{
   background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
   overflow:hidden;cursor:pointer;transition:all 0.2s;position:relative;
-  group:;
+  display:flex;flex-direction:column;
 }
 .photo-card:hover{border-color:rgba(109,92,255,0.4);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.4),0 0 0 1px rgba(109,92,255,0.1);}
 .photo-card.selected{border-color:var(--a1);box-shadow:0 0 0 2px rgba(109,92,255,0.35);}
@@ -311,29 +311,39 @@ body::before{
   display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
   color:var(--t3);font-size:28px;
 }
-.photo-info{padding:10px 12px;}
-.photo-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
-.photo-meta{font-size:10.5px;color:var(--t3);display:flex;justify-content:space-between;align-items:center;gap:4px;}
+.photo-info{padding:8px 10px 2px;}
+.photo-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.photo-meta{font-size:10px;color:var(--t3);display:flex;justify-content:space-between;align-items:center;gap:4px;}
 .ext-badge{background:var(--bg4);padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;color:var(--t2);font-family:'JetBrains Mono',monospace;}
 .video-badge{position:absolute;top:8px;left:36px;z-index:2;background:rgba(232,121,249,0.85);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.04em;backdrop-filter:blur(4px);}
-.drive-badge{position:absolute;bottom:48px;right:8px;z-index:2;background:rgba(66,133,244,0.85);color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;backdrop-filter:blur(4px);}
+.drive-badge{position:absolute;top:8px;right:8px;z-index:2;background:rgba(66,133,244,0.85);color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;backdrop-filter:blur(4px);}
 
 .photo-overlay{
-  position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.6) 0%,transparent 50%);
-  opacity:0;transition:opacity 0.2s;border-radius:var(--r) var(--r) 0 0;
+  position:absolute;top:0;left:0;right:0;height:55%;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.4) 0%,transparent 100%);
+  opacity:0;transition:opacity 0.2s;
 }
 .photo-card:hover .photo-overlay{opacity:1;}
 
-.photo-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:all 0.2s;z-index:3;}
-.photo-card:hover .photo-actions{opacity:1;}
-.pab{
-  width:30px;height:30px;background:rgba(0,0,0,0.75);border:none;border-radius:7px;
-  color:#fff;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;
-  transition:all 0.15s;backdrop-filter:blur(6px);
+/* Always-visible action bar at bottom of card */
+.photo-actions{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 8px;
+  background:linear-gradient(135deg,rgba(13,14,26,0.95),rgba(19,20,32,0.98));
+  border-top:1px solid var(--border);
+  gap:4px;
+  flex-shrink:0;
 }
-.pab:hover{background:var(--a1);}
-.pab.info-btn:hover{background:rgba(109,92,255,0.8);}
-.pab.danger:hover{background:var(--red);}
+.pab{
+  flex:1;height:28px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;
+  color:var(--t2);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;
+}
+.pab:hover{transform:scale(1.08);}
+.pab.star-btn:hover{background:rgba(251,191,36,0.2);border-color:rgba(251,191,36,0.4);color:var(--gold);}
+.pab.info-btn:hover{background:rgba(109,92,255,0.2);border-color:rgba(109,92,255,0.4);color:var(--a3);}
+.pab.share-btn:hover{background:rgba(34,211,238,0.15);border-color:rgba(34,211,238,0.35);color:var(--cyan);}
+.pab.danger:hover{background:rgba(244,63,94,0.2);border-color:rgba(244,63,94,0.4);color:var(--red);}
 
 .select-check{
   position:absolute;top:8px;left:8px;width:24px;height:24px;
@@ -346,13 +356,18 @@ body::before{
 .photo-card.selected .select-check{background:var(--a1);border-color:var(--a1);}
 
 /* LIST VIEW */
-.photo-grid.list-view .photo-card{display:flex;align-items:center;border-radius:var(--r2);}
+.photo-grid.list-view .photo-card{flex-direction:row;align-items:center;border-radius:var(--r2);}
 .photo-grid.list-view .photo-thumb,.photo-grid.list-view .photo-thumb-placeholder{width:54px;aspect-ratio:1;flex-shrink:0;border-radius:0;font-size:18px;}
 .photo-grid.list-view .photo-info{flex:1;padding:10px 16px;}
-.photo-grid.list-view .photo-actions{position:static;opacity:1;margin-right:12px;}
+.photo-grid.list-view .photo-actions{border-top:none;border-left:1px solid var(--border);padding:8px 10px;background:transparent;gap:6px;flex-shrink:0;}
+.photo-grid.list-view .photo-actions .pab{width:30px;height:30px;flex:none;}
 .photo-grid.list-view .photo-overlay{display:none;}
 .photo-grid.list-view .video-badge,.photo-grid.list-view .drive-badge{display:none;}
 .photo-grid.list-view .select-check{top:50%;transform:translateY(-50%);left:62px;}
+
+/* COMPACT VIEW — smaller action bar */
+.photo-grid.compact-view .photo-actions{padding:5px 6px;gap:3px;}
+.photo-grid.compact-view .pab{height:24px;font-size:10px;border-radius:5px;}
 
 /* ─── ALBUMS ─── */
 .album-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
@@ -703,7 +718,11 @@ body::before{
       <button class="pin-btn enter" onclick="submitPin()"><i class="fa-solid fa-arrow-right"></i></button>
     </div>
     <div class="lock-error" id="pinError"></div>
-    <button class="bio-btn" onclick="tryBiometric()"><i class="fa-solid fa-fingerprint"></i> Biometric / Device Lock ব্যবহার করুন</button>
+    <button class="bio-btn" id="bioBtn" onclick="tryBiometric()" style="display:none">
+      <i class="fa-solid fa-fingerprint" id="bioIcon"></i>
+      <span id="bioLabel">Fingerprint / Face ID ব্যবহার করুন</span>
+    </button>
+    <div id="bioStatus" style="font-size:12px;color:var(--t3);text-align:center;margin-top:8px;min-height:18px"></div>
   </div>
 </div>
 
@@ -815,6 +834,18 @@ body::before{
           <div class="chip" onclick="filterChip('starred',this)"><i class="fa-solid fa-star"></i> Starred</div>
           <div class="chip" onclick="filterChip('today',this)"><i class="fa-solid fa-calendar-day"></i> Today</div>
           <div class="chip" onclick="filterChip('drive',this)"><i class="fa-brands fa-google-drive" style="color:#4285f4"></i> Drive</div>
+          <!-- Drive Account Selector -->
+          <div id="driveAcctFilterWrap" style="display:none;position:relative">
+            <button class="btn btn-ghost btn-sm" onclick="toggleDriveAcctDropdown(event)" id="driveAcctFilterBtn" style="gap:6px;border-color:rgba(66,133,244,0.35);color:#4285f4">
+              <i class="fa-brands fa-google-drive"></i>
+              <span id="driveAcctFilterLabel">সব Drive</span>
+              <i class="fa-solid fa-chevron-down" style="font-size:9px"></i>
+            </button>
+            <div id="driveAcctDropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:220px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);box-shadow:var(--sh2);z-index:200;padding:6px;overflow:hidden">
+              <div style="font-size:9px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;padding:4px 8px 6px">Drive Account বেছে নিন</div>
+              <div id="driveAcctList"></div>
+            </div>
+          </div>
           <select class="sort-sel" onchange="sortPhotos(this.value)">
             <option value="date-desc">নতুন আগে</option>
             <option value="date-asc">পুরনো আগে</option>
@@ -1294,6 +1325,7 @@ function updatePinHint(){
   document.getElementById('pinHintText').textContent=`এখন ${h}:${String(m).padStart(2,'0')} ${ap} → PIN: ${pin}`;
 }
 updatePinHint();setInterval(updatePinHint,10000);
+initBiometric();
 function addPin(d){if(pinValue.length>=4)return;pinValue+=d;updateDots();if(pinValue.length===4)setTimeout(submitPin,200);}
 function clearPin(){pinValue=pinValue.slice(0,-1);updateDots();document.getElementById('pinError').textContent='';}
 function updateDots(){document.querySelectorAll('.pin-dot').forEach((d,i)=>d.classList.toggle('filled',i<pinValue.length));}
@@ -1303,9 +1335,103 @@ function submitPin(){
   pinValue='';updateDots();
   const c=document.querySelector('.lock-card');c.style.animation='shake 0.4s ease';setTimeout(()=>c.style.animation='',400);
 }
+// ══ BIOMETRIC — WebAuthn (real device fingerprint/face/PIN) ══
+const BIO_CRED_KEY = 'dg_bio_credId';
+
+async function initBiometric(){
+  const btn = document.getElementById('bioBtn');
+  const status = document.getElementById('bioStatus');
+  if(!window.PublicKeyCredential){
+    if(btn) btn.style.display = 'none';
+    return;
+  }
+  const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(()=>false);
+  if(!available){ if(btn) btn.style.display='none'; return; }
+  if(btn) btn.style.display = '';
+
+  // If no credential registered yet, show register option
+  const credId = localStorage.getItem(BIO_CRED_KEY);
+  if(!credId){
+    document.getElementById('bioLabel').textContent = 'Biometric সেটআপ করুন';
+    document.getElementById('bioIcon').className = 'fa-solid fa-fingerprint';
+    if(status) status.textContent = 'প্রথমবার: Fingerprint/Face নিবন্ধন করুন';
+  } else {
+    document.getElementById('bioLabel').textContent = 'Fingerprint / Face ID দিয়ে প্রবেশ করুন';
+    document.getElementById('bioIcon').className = 'fa-solid fa-fingerprint';
+    // Auto-trigger biometric on load for convenience
+    setTimeout(()=>tryBiometric(), 600);
+  }
+}
+
 async function tryBiometric(){
-  if(window.PublicKeyCredential){showToast('Biometric চাওয়া হচ্ছে...','info');setTimeout(()=>{unlockApp();showToast('✓ Biometric সফল!','success');},1500);}
-  else showToast('এই ডিভাইসে Biometric নেই','error');
+  const btn = document.getElementById('bioBtn');
+  const status = document.getElementById('bioStatus');
+  const icon = document.getElementById('bioIcon');
+
+  if(!window.PublicKeyCredential){ showToast('এই ডিভাইসে Biometric নেই','error'); return; }
+
+  const credId = localStorage.getItem(BIO_CRED_KEY);
+
+  if(!credId){
+    // ── REGISTER ──
+    try{
+      if(icon) icon.className='fa-solid fa-circle-notch fa-spin';
+      if(status) status.textContent = 'Biometric স্ক্যান করুন...';
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      const userId    = crypto.getRandomValues(new Uint8Array(16));
+      const cred = await navigator.credentials.create({publicKey:{
+        challenge,
+        rp:{name:'DriveGallery', id: location.hostname||'localhost'},
+        user:{id:userId, name:'drivegallery_user', displayName:'DriveGallery User'},
+        pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+        authenticatorSelection:{authenticatorAttachment:'platform', userVerification:'required'},
+        timeout:60000,
+        attestation:'none'
+      }});
+      // Save credential ID
+      const rawId = Array.from(new Uint8Array(cred.rawId));
+      localStorage.setItem(BIO_CRED_KEY, JSON.stringify(rawId));
+      if(icon) icon.className='fa-solid fa-circle-check';
+      if(status) status.textContent = '✅ Biometric নিবন্ধিত হয়েছে!';
+      document.getElementById('bioLabel').textContent='Fingerprint / Face ID দিয়ে প্রবেশ করুন';
+      setTimeout(()=>{if(status)status.textContent='';if(icon)icon.className='fa-solid fa-fingerprint';},2000);
+    }catch(err){
+      if(icon) icon.className='fa-solid fa-fingerprint';
+      if(status) status.textContent = err.name==='NotAllowedError'?'বাতিল করা হয়েছে':'Biometric ব্যর্থ হয়েছে';
+      setTimeout(()=>{if(status)status.textContent='';},3000);
+    }
+  } else {
+    // ── AUTHENTICATE ──
+    try{
+      if(icon) icon.className='fa-solid fa-circle-notch fa-spin';
+      if(status) status.textContent = 'Biometric যাচাই করা হচ্ছে...';
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      const rawId = new Uint8Array(JSON.parse(localStorage.getItem(BIO_CRED_KEY)));
+      await navigator.credentials.get({publicKey:{
+        challenge,
+        allowCredentials:[{id:rawId, type:'public-key', transports:['internal']}],
+        userVerification:'required',
+        timeout:60000
+      }});
+      // Success
+      if(icon) icon.className='fa-solid fa-circle-check';
+      if(status) status.textContent='✅ পরিচয় নিশ্চিত!';
+      setTimeout(()=>unlockApp(), 400);
+    }catch(err){
+      if(icon) icon.className='fa-solid fa-fingerprint';
+      if(err.name==='NotAllowedError'){
+        if(status) status.textContent='বাতিল করা হয়েছে বা সময় শেষ';
+      } else if(err.name==='InvalidStateError'){
+        // Credential not found — clear and re-register
+        localStorage.removeItem(BIO_CRED_KEY);
+        document.getElementById('bioLabel').textContent='Biometric সেটআপ করুন';
+        if(status) status.textContent='Credential পাওয়া যায়নি — আবার সেটআপ করুন';
+      } else {
+        if(status) status.textContent='Biometric ব্যর্থ: '+err.message;
+      }
+      setTimeout(()=>{if(status)status.textContent='';},3500);
+    }
+  }
 }
 function unlockApp(){
   document.getElementById('lockScreen').style.display='none';
@@ -1340,6 +1466,8 @@ function closeSidebar(){document.getElementById('sidebar').classList.remove('ope
 // ══ PHOTOS ══
 function getFilteredPhotos(){
   let list=[...photos];
+  // Drive account filter
+  if(currentDriveAcctFilter!==-1) list=list.filter(p=>p.accountIdx===currentDriveAcctFilter&&p.fromDrive);
   if(currentFilter==='image')list=list.filter(p=>p.type==='image');
   else if(currentFilter==='video')list=list.filter(p=>p.type==='video');
   else if(currentFilter==='starred')list=list.filter(p=>p.starred);
@@ -1413,9 +1541,9 @@ function makePhotoCard(p,idx){
       <div class="photo-meta"><span style="display:flex;align-items:center;gap:4px"><span class="ext-badge">${ext}</span>${p.size}</span><span>${formatDate(p.date)}</span></div>
     </div>
     <div class="photo-actions">
-      <button class="pab" onclick="toggleStar(event,'${p.id}')" title="Star"><i class="${p.starred?'fa-solid':'fa-regular'} fa-star" ${p.starred?'style="color:var(--gold)"':''}></i></button>
+      <button class="pab star-btn" onclick="toggleStar(event,'${p.id}')" title="Star"><i class="${p.starred?'fa-solid':'fa-regular'} fa-star" ${p.starred?'style="color:var(--gold)"':''}></i></button>
       <button class="pab info-btn" onclick="showFileDetails(event,'${p.id}')" title="Details"><i class="fa-solid fa-circle-info"></i></button>
-      <button class="pab" onclick="sharePhoto(event,'${p.id}')" title="Share"><i class="fa-solid fa-share"></i></button>
+      <button class="pab share-btn" onclick="sharePhoto(event,'${p.id}')" title="Share"><i class="fa-solid fa-share"></i></button>
       <button class="pab danger" onclick="deletePhoto(event,'${p.id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
     </div>
   </div>`;
@@ -1444,6 +1572,48 @@ function filterChip(f,el){currentFilter=f;currentPage=1;document.querySelectorAl
 function filterType(f,el){showPage('photos',el);currentFilter=f;currentPage=1;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));renderPhotos();}
 function sortPhotos(v){currentSort=v;currentPage=1;renderPhotos();}
 function searchPhotos(){currentPage=1;renderPhotos();}
+
+// ── Drive Account Filter ──
+let currentDriveAcctFilter = -1; // -1 = all accounts
+
+function toggleDriveAcctDropdown(e){
+  e.stopPropagation();
+  const dd=document.getElementById('driveAcctDropdown');
+  if(dd.style.display==='none'||!dd.style.display){renderDriveAcctDropdown();dd.style.display='block';}
+  else dd.style.display='none';
+}
+document.addEventListener('click',()=>{
+  const dd=document.getElementById('driveAcctDropdown');
+  if(dd)dd.style.display='none';
+});
+function renderDriveAcctDropdown(){
+  const list=document.getElementById('driveAcctList');if(!list)return;
+  const items=[{idx:-1,label:'সব Drive',color:'var(--a1)'},...driveAccounts.map((a,i)=>({idx:i,label:a.email,color:a.color,picture:a.picture,avatar:a.avatar}))];
+  list.innerHTML=items.map(item=>`
+    <div onclick="selectDriveAcctFilter(${item.idx})" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r2);cursor:pointer;background:${currentDriveAcctFilter===item.idx?'rgba(109,92,255,0.12)':'transparent'}">
+      ${item.idx===-1
+        ?`<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--pink));display:flex;align-items:center;justify-content:center"><i class="fa-brands fa-google-drive" style="color:#fff;font-size:12px"></i></div>`
+        :(item.picture?`<img src="${item.picture}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">`
+          :`<div style="width:28px;height:28px;border-radius:50%;background:${item.color}22;color:${item.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">${item.avatar||'?'}</div>`)
+      }
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${currentDriveAcctFilter===item.idx?'var(--a3)':'var(--text)'}">${item.label}</div>
+        ${item.idx!==-1?`<div style="font-size:10px;color:var(--t3)">${photos.filter(p=>p.accountIdx===item.idx).length} ফাইল</div>`:''}
+      </div>
+      ${currentDriveAcctFilter===item.idx?'<i class="fa-solid fa-check" style="color:var(--a3);font-size:11px"></i>':''}
+    </div>`).join('');
+}
+function selectDriveAcctFilter(idx){
+  currentDriveAcctFilter=idx;
+  const label=document.getElementById('driveAcctFilterLabel');
+  if(label)label.textContent=idx===-1?'সব Drive':(driveAccounts[idx]?.email?.split('@')[0]||'Drive '+(idx+1));
+  document.getElementById('driveAcctDropdown').style.display='none';
+  currentPage=1;renderPhotos();
+}
+function updateDriveAcctFilterUI(){
+  const wrap=document.getElementById('driveAcctFilterWrap');
+  if(wrap)wrap.style.display=driveAccounts.length>0?'':'none';
+}
 function formatDate(d){try{return new Date(d).toLocaleDateString('bn-BD',{month:'short',day:'numeric'});}catch{return '';}}
 function updateStats(){
   document.getElementById('statTotal').textContent=photos.length;
@@ -1873,6 +2043,7 @@ function initDriveUI(){
       </div>`;
     if(sync)sync.style.display='block';
     renderDriveStorageBars();
+    updateDriveAcctFilterUI();
     // Update sidebar storage
     const totalUsed=driveAccounts.reduce((s,a)=>s+a.usedBytes,0);
     const totalAll=driveAccounts.reduce((s,a)=>s+a.totalBytes,0);
@@ -2283,6 +2454,7 @@ const _style=document.createElement('style');
 _style.textContent='@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}';
 document.head.appendChild(_style);
 migrateThumbUrls();
+updateDriveAcctFilterUI();
 renderPhotos();renderAlbums();updateStats();initDriveUI();
 
 </script>

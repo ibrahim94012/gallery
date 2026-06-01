@@ -1191,17 +1191,26 @@ const thumbObserver = new IntersectionObserver((entries)=>{
 },{rootMargin:'200px'});
 
 async function loadThumbForEl(imgEl,driveId,acctIdx){
-  // Already cached
+  // Build the safe thumbnail URL
+  const safeUrl=`https://drive.google.com/thumbnail?id=${driveId}&sz=s400`;
+
+  // Replace any old 403-prone lh3/drive-storage URLs in cache
+  const cached=thumbCache.get(driveId);
+  if(cached&&(cached.includes('lh3.googleusercontent.com')||cached.includes('drive-storage'))){
+    thumbCache.set(driveId,safeUrl);
+  }
+
+  // Use cache if available
   if(thumbCache.has(driveId)){
     imgEl.src=thumbCache.get(driveId);
     imgEl.style.opacity='1';
     return;
   }
-  // Use Google Drive public thumbnail URL (no auth required, loads reliably)
-  const thumbUrl=`https://drive.google.com/thumbnail?id=${driveId}&sz=s400`;
-  thumbCache.set(driveId,thumbUrl);
+
+  // Set safe URL directly — no auth needed
+  thumbCache.set(driveId,safeUrl);
   if(imgEl.isConnected){
-    imgEl.src=thumbUrl;
+    imgEl.src=safeUrl;
     imgEl.style.opacity='1';
     imgEl.onerror=function(){
       thumbCache.delete(driveId);
@@ -1209,7 +1218,7 @@ async function loadThumbForEl(imgEl,driveId,acctIdx){
     };
   }
   const photo=photos.find(p=>p.driveId===driveId);
-  if(photo)photo.thumb=thumbUrl;
+  if(photo)photo.thumb=safeUrl;
 }
 
 function showPlaceholderOnImg(imgEl){
@@ -1259,6 +1268,22 @@ function saveData(){
   localStorage.setItem('dg_albums',JSON.stringify(albums));
   localStorage.setItem('dg_trash', JSON.stringify(trash));
 }
+
+// ── Migrate old lh3/drive-storage thumbnailLink URLs → drive.google.com/thumbnail ──
+function migrateThumbUrls(){
+  let changed=false;
+  photos.forEach(p=>{
+    if(p.driveId&&p.thumb&&(p.thumb.includes('lh3.googleusercontent.com')||p.thumb.includes('drive-storage'))){
+      p.thumb=`https://drive.google.com/thumbnail?id=${p.driveId}&sz=s400`;
+      changed=true;
+    }
+    if(p.driveThumbUrl&&(p.driveThumbUrl.includes('lh3.googleusercontent.com')||p.driveThumbUrl.includes('drive-storage'))){
+      p.driveThumbUrl=null;
+      changed=true;
+    }
+  });
+  if(changed)saveData();
+}
 function saveDriveAccounts(){localStorage.setItem('dg_driveAccounts',JSON.stringify(driveAccounts));}
 
 // ══ PIN LOCK ══
@@ -1285,6 +1310,7 @@ async function tryBiometric(){
 function unlockApp(){
   document.getElementById('lockScreen').style.display='none';
   const app=document.getElementById('app');app.style.display='flex';app.style.flexDirection='column';
+  migrateThumbUrls();
   renderPhotos();renderAlbums();updateStats();initDriveUI();initUploadPage();
 }
 function lockApp(){
@@ -1360,6 +1386,10 @@ function renderPhotos(){
 function makePhotoCard(p,idx){
   const sel=selectedItems.has(String(p.id)),isVideo=p.type==='video';
   const ext=p.name.split('.').pop().toUpperCase();
+  // Fix any old 403-prone thumbnailLink URLs saved in localStorage
+  if(p.thumb&&(p.thumb.includes('lh3.googleusercontent.com')||p.thumb.includes('drive-storage'))){
+    p.thumb=p.driveId?`https://drive.google.com/thumbnail?id=${p.driveId}&sz=s400`:null;
+  }
   let thumb;
   if(p.thumb){
     // Already have blob URL (cached)
@@ -1741,9 +1771,9 @@ async function loadAllDrivePhotos(accessToken,accountIdx){
           duration:f.videoMediaMetadata?.durationMillis||null,
           starred:false,color:COLORS[(totalLoaded+i)%COLORS.length],
           emoji:isVid?'🎬':'🖼️',
-          thumb:null,
+          thumb:`https://drive.google.com/thumbnail?id=${f.id}&sz=s400`,
           driveThumbId:f.id,
-          driveThumbUrl:f.thumbnailLink||null,
+          driveThumbUrl:null,
           fromDrive:true,accountIdx,parentId:f.parents?.[0]||null,
         };
       });
@@ -2252,6 +2282,7 @@ function updateFmStats(items){
 const _style=document.createElement('style');
 _style.textContent='@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}';
 document.head.appendChild(_style);
+migrateThumbUrls();
 renderPhotos();renderAlbums();updateStats();initDriveUI();
 
 </script>

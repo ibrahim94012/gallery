@@ -740,6 +740,7 @@ body::before{
     <div class="sidebar-section">
       <div class="sidebar-label">Main</div>
       <div class="nav-item active" onclick="showPage('photos',this)"><i class="fa-solid fa-images"></i> All Media <span class="nav-badge" id="navCount">0</span></div>
+      <div class="nav-item" onclick="showPage('gphotos',this)"><i class="fa-brands fa-google" style="color:#4285f4"></i> Google Photos <span class="nav-badge" id="gphotosCount" style="background:linear-gradient(135deg,#ea4335,#fbbc04);display:none">0</span></div>
       <div class="nav-item" onclick="showPage('fileman',this)"><i class="fa-solid fa-folder-tree"></i> File Manager <span class="nav-badge" id="fmDriveTag" style="background:linear-gradient(135deg,#4285f4,#34a853);font-size:8px;padding:2px 6px;">DRIVE</span></div>
       <div class="nav-item" onclick="showPage('albums',this)"><i class="fa-solid fa-layer-group"></i> Albums</div>
       <div class="nav-item" onclick="showPage('upload',this)"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</div>
@@ -907,6 +908,82 @@ body::before{
         </div>
       </div>
 
+      <!-- ══ GOOGLE PHOTOS PAGE ══ -->
+      <div class="page" id="page-gphotos">
+        <div class="page-header">
+          <div class="page-title" style="display:flex;align-items:center;gap:10px">
+            <span style="background:linear-gradient(135deg,#ea4335,#fbbc04,#34a853,#4285f4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Google Photos</span>
+            <span id="gphotosCountLabel" style="font-size:14px;font-weight:400;color:var(--t3)"></span>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-ghost btn-sm" id="gpAlbumViewBtn" onclick="toggleGpView('albums',this)" style="display:none"><i class="fa-solid fa-layer-group"></i> Albums</button>
+            <button class="btn btn-ghost btn-sm" id="gpGridViewBtn" onclick="toggleGpView('grid',this)" style="display:none"><i class="fa-solid fa-grip"></i> All Photos</button>
+            <button class="btn btn-primary btn-sm" id="gpLoadBtn" onclick="connectGooglePhotos()"><i class="fa-brands fa-google"></i> Photos লোড করুন</button>
+          </div>
+        </div>
+
+        <!-- Not connected state -->
+        <div id="gpNotConnected">
+          <div style="background:linear-gradient(135deg,rgba(234,67,53,0.06),rgba(66,133,244,0.06));border:1px solid rgba(66,133,244,0.15);border-radius:var(--r);padding:32px;text-align:center;max-width:560px;margin:40px auto">
+            <div style="width:72px;height:72px;margin:0 auto 20px;border-radius:20px;background:linear-gradient(135deg,#ea4335,#fbbc04,#34a853,#4285f4);display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff;box-shadow:0 8px 32px rgba(66,133,244,0.3)">
+              <i class="fa-brands fa-google"></i>
+            </div>
+            <h3 style="font-size:18px;font-weight:800;margin-bottom:8px">Google Photos সংযুক্ত করুন</h3>
+            <p style="font-size:13px;color:var(--t3);line-height:1.8;margin-bottom:20px">আপনার Google Photos Library থেকে সরাসরি ছবি ও ভিডিও দেখুন। OAuth 2.0 দিয়ে নিরাপদ সংযোগ।</p>
+            <div style="font-size:12px;color:var(--t3);display:flex;flex-direction:column;gap:6px;margin-bottom:22px;text-align:left;background:var(--bg3);border-radius:var(--r2);padding:14px 18px">
+              <div><i class="fa-solid fa-circle-check" style="color:var(--green);margin-right:7px"></i>সব ছবি ও অ্যালবাম দেখুন</div>
+              <div><i class="fa-solid fa-circle-check" style="color:var(--green);margin-right:7px"></i>High-quality থাম্বনেইল</div>
+              <div><i class="fa-solid fa-circle-check" style="color:var(--green);margin-right:7px"></i>তারিখ অনুযায়ী সাজানো</div>
+              <div><i class="fa-solid fa-circle-check" style="color:var(--green);margin-right:7px"></i>ডাউনলোড সুবিধা</div>
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">Google OAuth Client ID</label>
+              <input class="form-input" type="text" id="gpClientIdInput" placeholder="xxxx.apps.googleusercontent.com" oninput="gpCheckClientId()">
+              <div style="font-size:11px;color:var(--t3);margin-top:5px"><i class="fa-solid fa-info-circle"></i> <a href="https://console.cloud.google.com" target="_blank" style="color:var(--a3)">Google Console</a>-এ Photos Library API Enable করুন</div>
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="connectGooglePhotos()"><i class="fa-brands fa-google"></i> Google Photos-এ Sign In করুন</button>
+          </div>
+        </div>
+
+        <!-- Loading state -->
+        <div id="gpLoading" style="display:none;padding:60px;text-align:center">
+          <div style="width:52px;height:52px;border:3px solid var(--border2);border-top-color:#4285f4;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 20px"></div>
+          <div style="font-size:14px;color:var(--t2)" id="gpLoadingText">Google Photos লোড হচ্ছে...</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:6px" id="gpLoadingCount"></div>
+        </div>
+
+        <!-- Albums view -->
+        <div id="gpAlbumsView" style="display:none">
+          <div style="font-size:12px;color:var(--t3);margin-bottom:14px"><i class="fa-solid fa-layer-group" style="margin-right:6px;color:var(--a3)"></i>আপনার Albums</div>
+          <div id="gpAlbumsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px"></div>
+        </div>
+
+        <!-- Photos grid view -->
+        <div id="gpPhotosView" style="display:none">
+          <div class="filter-bar" style="margin-bottom:14px">
+            <div class="chip active" onclick="gpFilterCategory('ALL',this)">সব</div>
+            <div class="chip" onclick="gpFilterCategory('PHOTO',this)"><i class="fa-regular fa-image"></i> ছবি</div>
+            <div class="chip" onclick="gpFilterCategory('VIDEO',this)"><i class="fa-solid fa-video"></i> ভিডিও</div>
+            <button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="loadGpAlbums()"><i class="fa-solid fa-layer-group"></i> Albums দেখুন</button>
+            <button class="btn btn-ghost btn-xs" onclick="loadGpNextPage()" id="gpLoadMoreBtn" style="display:none"><i class="fa-solid fa-plus"></i> আরো লোড করুন</button>
+          </div>
+          <div id="gpGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px"></div>
+          <div style="text-align:center;padding:20px" id="gpLoadMoreWrap" style="display:none">
+            <button class="btn btn-outline" onclick="loadGpNextPage()"><i class="fa-solid fa-arrow-down"></i> আরো দেখুন</button>
+          </div>
+        </div>
+
+        <!-- Album detail view -->
+        <div id="gpAlbumDetail" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+            <button class="btn btn-ghost btn-sm" onclick="showGpAlbumsView()"><i class="fa-solid fa-arrow-left"></i> Albums</button>
+            <span id="gpAlbumDetailTitle" style="font-size:15px;font-weight:700"></span>
+            <span id="gpAlbumDetailCount" style="font-size:12px;color:var(--t3)"></span>
+          </div>
+          <div id="gpAlbumDetailGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px"></div>
+        </div>
+      </div>
+
       <!-- ══ ALBUMS PAGE ══ -->
       <div class="page" id="page-albums">
         <div class="page-header">
@@ -1038,6 +1115,22 @@ body::before{
 </div><!-- /app -->
 
 <!-- ═══ LIGHTBOX ═══ -->
+<!-- ══ GOOGLE PHOTOS LIGHTBOX ══ -->
+<div id="gpLightbox" style="position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:600;display:none;align-items:center;justify-content:center;flex-direction:column;backdrop-filter:blur(12px)">
+  <button onclick="closeGpLightbox()" style="position:absolute;top:18px;right:18px;width:42px;height:42px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.1);border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-xmark"></i></button>
+  <button onclick="gpLbNav(-1)" style="position:absolute;left:18px;top:50%;transform:translateY(-50%);width:48px;height:48px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.1);border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-chevron-left"></i></button>
+  <button onclick="gpLbNav(1)" style="position:absolute;right:18px;top:50%;transform:translateY(-50%);width:48px;height:48px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.1);border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-chevron-right"></i></button>
+  <div id="gpLbContent" style="max-width:90vw;max-height:75vh;display:flex;align-items:center;justify-content:center"></div>
+  <div style="margin-top:14px;text-align:center">
+    <div id="gpLbName" style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px"></div>
+    <div id="gpLbMeta" style="font-size:12px;color:rgba(255,255,255,0.5)"></div>
+  </div>
+  <div style="position:absolute;bottom:20px;display:flex;gap:8px">
+    <button onclick="gpDownloadCurrent()" style="padding:10px 18px;border-radius:10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:7px"><i class="fa-solid fa-download"></i> ডাউনলোড</button>
+    <button onclick="gpOpenInPhotos()" style="padding:10px 18px;border-radius:10px;background:rgba(66,133,244,0.2);border:1px solid rgba(66,133,244,0.3);color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:7px"><i class="fa-brands fa-google"></i> Photos-এ দেখুন</button>
+  </div>
+</div>
+
 <div id="lightbox">
   <button class="lb-close" onclick="closeLightbox()"><i class="fa-solid fa-xmark"></i></button>
   <button class="lb-nav lb-prev" onclick="lbNavigate(-1)"><i class="fa-solid fa-chevron-left"></i></button>
@@ -1455,6 +1548,7 @@ function showPage(name,el){
   if(name==='trash')renderTrash();
   if(name==='fileman')initFileManager();
   if(name==='upload')initUploadPage();
+  if(name==='gphotos')loadGpPhotos();
 }
 function setMobileNav(name){
   document.querySelectorAll('.mnav-item').forEach(b=>b.classList.remove('active'));
@@ -2448,6 +2542,310 @@ function updateFmStats(items){
   document.getElementById('fmFileCount').textContent=files;
   document.getElementById('fmTotalSize').textContent=formatBytes(totalSize);
 }
+
+// ══════════════════════════════════════════════════
+// ══ GOOGLE PHOTOS API ══
+// ══════════════════════════════════════════════════
+const GP_SCOPES = 'https://www.googleapis.com/auth/photoslibrary.readonly';
+const GP_API = 'https://photoslibrary.googleapis.com/v1';
+let gpAccessToken = null;
+let gpTokenExpiry = 0;
+let gpAllItems = [];
+let gpFilteredItems = [];
+let gpAlbums = [];
+let gpNextPageToken = null;
+let gpCurrentAlbumId = null;
+let gpLbIndex = 0;
+let gpLbItems = [];
+let gpCurrentView = 'grid'; // 'grid' | 'albums' | 'albumDetail'
+
+function gpCheckClientId(){
+  const v = (document.getElementById('gpClientIdInput')?.value||'').trim();
+  if(v) localStorage.setItem('gp_clientId', v);
+}
+
+function connectGooglePhotos(){
+  const clientId = (document.getElementById('gpClientIdInput')?.value||'').trim()
+    || localStorage.getItem('gp_clientId')
+    || localStorage.getItem('dg_clientId')
+    || '';
+  if(!clientId){showToast('Client ID দিন (Settings এ Drive Client ID থাকলে ব্যবহার হবে)','error');return;}
+  if(!clientId.endsWith('.apps.googleusercontent.com')){showToast('সঠিক Client ID দিন','error');return;}
+  localStorage.setItem('gp_clientId', clientId);
+
+  if(!window.google?.accounts){showToast('Google API লোড হয়নি, Refresh করুন','error');return;}
+  try{
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: GP_SCOPES,
+      callback: (resp) => {
+        if(resp.error){showToast('OAuth Error: '+resp.error,'error');return;}
+        gpAccessToken = resp.access_token;
+        gpTokenExpiry = Date.now() + 3500000;
+        localStorage.setItem('gp_token', gpAccessToken);
+        localStorage.setItem('gp_tokenExpiry', gpTokenExpiry);
+        showToast('✅ Google Photos সংযুক্ত!','success');
+        loadGpPhotos();
+      }
+    });
+    client.requestAccessToken({prompt:'select_account'});
+  }catch(err){showToast('OAuth শুরু হয়নি: '+err.message,'error');}
+}
+
+async function loadGpPhotos(){
+  // Try restore token
+  if(!gpAccessToken){
+    const saved = localStorage.getItem('gp_token');
+    const exp = parseInt(localStorage.getItem('gp_tokenExpiry')||0);
+    if(saved && Date.now() < exp){ gpAccessToken = saved; gpTokenExpiry = exp; }
+  }
+  if(!gpAccessToken){
+    document.getElementById('gpNotConnected').style.display='block';
+    document.getElementById('gpLoading').style.display='none';
+    document.getElementById('gpPhotosView').style.display='none';
+    document.getElementById('gpAlbumsView').style.display='none';
+    document.getElementById('gpAlbumDetail').style.display='none';
+    return;
+  }
+
+  document.getElementById('gpNotConnected').style.display='none';
+  document.getElementById('gpLoading').style.display='block';
+  document.getElementById('gpPhotosView').style.display='none';
+  document.getElementById('gpAlbumsView').style.display='none';
+  document.getElementById('gpAlbumDetail').style.display='none';
+  document.getElementById('gpLoadBtn').innerHTML='<i class="fa-solid fa-rotate fa-spin"></i> লোড হচ্ছে...';
+  document.getElementById('gpLoadBtn').disabled=true;
+
+  gpAllItems=[];gpNextPageToken=null;
+  await gpFetchPage(null);
+}
+
+async function gpFetchPage(pageToken){
+  try{
+    const body={pageSize:100};
+    if(pageToken) body.pageToken=pageToken;
+    const res = await fetch(GP_API+'/mediaItems:list?'+ new URLSearchParams({pageSize:100,...(pageToken?{pageToken}:{})}), {
+      headers:{Authorization:'Bearer '+gpAccessToken}
+    });
+    if(res.status===401){
+      showToast('Token মেয়াদ শেষ — আবার Sign In করুন','error');
+      gpAccessToken=null; localStorage.removeItem('gp_token');
+      document.getElementById('gpNotConnected').style.display='block';
+      document.getElementById('gpLoading').style.display='none';
+      document.getElementById('gpLoadBtn').innerHTML='<i class="fa-brands fa-google"></i> Photos লোড করুন';
+      document.getElementById('gpLoadBtn').disabled=false;
+      return;
+    }
+    if(!res.ok) throw new Error('API '+res.status);
+    const data=await res.json();
+    const items=(data.mediaItems||[]);
+    gpAllItems.push(...items);
+    gpNextPageToken=data.nextPageToken||null;
+    document.getElementById('gpLoadingCount').textContent=gpAllItems.length+' টি মিডিয়া লোড হয়েছে...';
+    if(gpNextPageToken && gpAllItems.length<200){
+      await gpFetchPage(gpNextPageToken);
+    } else {
+      gpFinishLoad();
+    }
+  }catch(e){
+    showToast('Photos লোড ব্যর্থ: '+e.message,'error');
+    document.getElementById('gpLoading').style.display='none';
+    document.getElementById('gpLoadBtn').innerHTML='<i class="fa-brands fa-google"></i> Photos লোড করুন';
+    document.getElementById('gpLoadBtn').disabled=false;
+  }
+}
+
+function gpFinishLoad(){
+  document.getElementById('gpLoading').style.display='none';
+  document.getElementById('gpLoadBtn').innerHTML='<i class="fa-solid fa-rotate"></i> Refresh';
+  document.getElementById('gpLoadBtn').disabled=false;
+  document.getElementById('gpAlbumViewBtn').style.display='';
+  document.getElementById('gpGridViewBtn').style.display='';
+  gpFilteredItems=[...gpAllItems];
+  gpRenderGrid(gpFilteredItems);
+  document.getElementById('gpPhotosView').style.display='block';
+  // Update count badge
+  const cnt=gpAllItems.length;
+  document.getElementById('gphotosCountLabel').textContent='('+cnt+')';
+  const badge=document.getElementById('gphotosCount');
+  badge.textContent=cnt>99?'99+':cnt; badge.style.display=cnt?'':'none';
+  if(gpNextPageToken) document.getElementById('gpLoadMoreBtn').style.display='';
+}
+
+function gpFilterCategory(type, el){
+  document.querySelectorAll('#gpPhotosView .chip').forEach(c=>c.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(type==='ALL') gpFilteredItems=[...gpAllItems];
+  else if(type==='PHOTO') gpFilteredItems=gpAllItems.filter(m=>m.mediaMetadata?.photo);
+  else if(type==='VIDEO') gpFilteredItems=gpAllItems.filter(m=>m.mediaMetadata?.video);
+  gpRenderGrid(gpFilteredItems);
+}
+
+function gpRenderGrid(items){
+  const grid=document.getElementById('gpGrid');
+  if(items.length===0){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-image"></i><h3>কোনো মিডিয়া নেই</h3></div>';return;}
+  grid.innerHTML=items.map((m,i)=>{
+    const isVid=!!m.mediaMetadata?.video;
+    const thumb=m.baseUrl+'=w320-h320-c';
+    const date=m.mediaMetadata?.creationTime?new Date(m.mediaMetadata.creationTime).toLocaleDateString('bn-BD',{year:'numeric',month:'short',day:'numeric'}):'';
+    return`<div onclick="openGpLightbox(${i},'grid')" style="position:relative;aspect-ratio:1;border-radius:var(--r2);overflow:hidden;cursor:pointer;background:var(--bg3);border:1px solid var(--border);transition:all 0.15s" onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='var(--a1)'" onmouseout="this.style.transform='';this.style.borderColor='var(--border)'">
+      <img src="${thumb}" loading="lazy" style="width:100%;height:100%;object-fit:cover" alt="${m.filename||''}">
+      ${isVid?'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="background:rgba(0,0,0,0.5);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-play" style="color:#fff;font-size:12px;margin-left:2px"></i></div></div>':''}
+      <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.6));padding:18px 6px 5px;font-size:9px;color:rgba(255,255,255,0.7)">${date}</div>
+    </div>`;
+  }).join('');
+}
+
+async function loadGpAlbums(){
+  if(!gpAccessToken){showToast('প্রথমে Photos সংযুক্ত করুন','error');return;}
+  showGpAlbumsView();
+  document.getElementById('gpAlbumsGrid').innerHTML='<div style="grid-column:1/-1;padding:40px;text-align:center"><div style="width:32px;height:32px;border:3px solid var(--border2);border-top-color:#4285f4;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px"></div><span style="font-size:13px;color:var(--t2)">Albums লোড হচ্ছে...</span></div>';
+  try{
+    const res=await fetch(GP_API+'/albums?pageSize=50',{headers:{Authorization:'Bearer '+gpAccessToken}});
+    if(!res.ok) throw new Error('API '+res.status);
+    const data=await res.json();
+    gpAlbums=data.albums||[];
+    gpRenderAlbums();
+  }catch(e){
+    document.getElementById('gpAlbumsGrid').innerHTML='<div class="empty-state" style="grid-column:1/-1"><h3>Albums লোড ব্যর্থ</h3><p>'+e.message+'</p></div>';
+  }
+}
+
+function gpRenderAlbums(){
+  const grid=document.getElementById('gpAlbumsGrid');
+  if(gpAlbums.length===0){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-layer-group"></i><h3>কোনো Album নেই</h3></div>';return;}
+  const colors=['#ea4335','#fbbc04','#34a853','#4285f4','#9c27b0','#e91e63'];
+  grid.innerHTML=gpAlbums.map((a,i)=>{
+    const cover=a.coverPhotoBaseUrl?a.coverPhotoBaseUrl+'=w320-h240-c':'';
+    const color=colors[i%colors.length];
+    return`<div onclick="openGpAlbum('${a.id}','${(a.title||'Album').replace(/'/g,"\\'")}',${a.mediaItemsCount||0})" style="border-radius:var(--r);overflow:hidden;cursor:pointer;background:var(--bg3);border:1px solid var(--border);transition:all 0.15s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <div style="height:130px;overflow:hidden;background:${color}22;display:flex;align-items:center;justify-content:center">
+        ${cover?`<img src="${cover}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`:`<i class="fa-solid fa-images" style="font-size:36px;color:${color}"></i>`}
+      </div>
+      <div style="padding:10px 12px">
+        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.title||'Untitled'}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">${a.mediaItemsCount||0} items</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function openGpAlbum(albumId, title, count){
+  gpCurrentAlbumId=albumId;
+  document.getElementById('gpAlbumDetailTitle').textContent=title;
+  document.getElementById('gpAlbumDetailCount').textContent='('+count+')';
+  document.getElementById('gpAlbumsView').style.display='none';
+  document.getElementById('gpAlbumDetail').style.display='block';
+  const dgrid=document.getElementById('gpAlbumDetailGrid');
+  dgrid.innerHTML='<div style="grid-column:1/-1;padding:40px;text-align:center"><div style="width:32px;height:32px;border:3px solid var(--border2);border-top-color:#4285f4;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px"></div><span style="font-size:13px;color:var(--t2)">লোড হচ্ছে...</span></div>';
+  try{
+    const res=await fetch(GP_API+'/mediaItems:search',{
+      method:'POST',headers:{Authorization:'Bearer '+gpAccessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({albumId,pageSize:100})
+    });
+    if(!res.ok) throw new Error('API '+res.status);
+    const data=await res.json();
+    const items=data.mediaItems||[];
+    if(items.length===0){dgrid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-image"></i><h3>Album খালি</h3></div>';return;}
+    dgrid.innerHTML=items.map((m,i)=>{
+      const isVid=!!m.mediaMetadata?.video;
+      const thumb=m.baseUrl+'=w320-h320-c';
+      return`<div onclick="openGpLightbox(${i},'album_${albumId}')" data-album-idx="${i}" style="position:relative;aspect-ratio:1;border-radius:var(--r2);overflow:hidden;cursor:pointer;background:var(--bg3);border:1px solid var(--border);transition:all 0.15s" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform=''">
+        <img src="${thumb}" loading="lazy" style="width:100%;height:100%;object-fit:cover" alt="${m.filename||''}">
+        ${isVid?'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="background:rgba(0,0,0,0.5);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-play" style="color:#fff;font-size:12px;margin-left:2px"></i></div></div>':''}
+      </div>`;
+    }).join('');
+    // Store album items for lightbox
+    window._gpAlbumItems = window._gpAlbumItems || {};
+    window._gpAlbumItems[albumId] = items;
+  }catch(e){dgrid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><h3>লোড ব্যর্থ: '+e.message+'</h3></div>';}
+}
+
+function openGpLightbox(idx, context){
+  if(context==='grid'){gpLbItems=gpFilteredItems;}
+  else if(context && context.startsWith('album_')){
+    const aId=context.replace('album_','');
+    gpLbItems=(window._gpAlbumItems&&window._gpAlbumItems[aId])||gpFilteredItems;
+  } else { gpLbItems=gpFilteredItems; }
+  gpLbIndex=idx;
+  showGpLbItem();
+  document.getElementById('gpLightbox').style.display='flex';
+}
+
+function showGpLbItem(){
+  const m=gpLbItems[gpLbIndex];if(!m)return;
+  const content=document.getElementById('gpLbContent');
+  const isVid=!!m.mediaMetadata?.video;
+  const highRes=m.baseUrl+'=w1600-h1200';
+  content.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-width:200px;min-height:200px"><div style="width:48px;height:48px;border:3px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite"></div></div>';
+  if(isVid){
+    content.innerHTML=`<video src="${m.baseUrl}=dv" controls style="max-width:90vw;max-height:72vh;border-radius:10px"></video>`;
+  } else {
+    const img=new Image();
+    img.onload=()=>{content.innerHTML=`<img src="${highRes}" style="max-width:90vw;max-height:72vh;object-fit:contain;border-radius:10px" alt="${m.filename||''}">`;}
+    img.onerror=()=>{content.innerHTML=`<img src="${m.baseUrl}=w800" style="max-width:90vw;max-height:72vh;object-fit:contain;border-radius:10px">`;}
+    img.src=highRes;
+  }
+  document.getElementById('gpLbName').textContent=m.filename||'';
+  const meta=[];
+  if(m.mediaMetadata?.creationTime) meta.push(new Date(m.mediaMetadata.creationTime).toLocaleDateString('bn-BD',{year:'numeric',month:'long',day:'numeric'}));
+  if(m.mediaMetadata?.photo?.cameraModel) meta.push(m.mediaMetadata.photo.cameraModel);
+  if(m.mediaMetadata?.width) meta.push(m.mediaMetadata.width+'×'+m.mediaMetadata.height);
+  document.getElementById('gpLbMeta').textContent=meta.join(' · ');
+}
+
+function closeGpLightbox(){document.getElementById('gpLightbox').style.display='none';}
+function gpLbNav(dir){gpLbIndex=(gpLbIndex+dir+gpLbItems.length)%gpLbItems.length;showGpLbItem();}
+function gpDownloadCurrent(){const m=gpLbItems[gpLbIndex];if(m){window.open(m.baseUrl+'=d','_blank');}}
+function gpOpenInPhotos(){const m=gpLbItems[gpLbIndex];if(m&&m.productUrl){window.open(m.productUrl,'_blank');}}
+
+async function loadGpNextPage(){
+  if(!gpNextPageToken||!gpAccessToken)return;
+  document.getElementById('gpLoadMoreBtn').innerHTML='<i class="fa-solid fa-rotate fa-spin"></i>';
+  await gpFetchPage(gpNextPageToken);
+  document.getElementById('gpLoadMoreBtn').innerHTML='<i class="fa-solid fa-plus"></i> আরো লোড করুন';
+  if(!gpNextPageToken) document.getElementById('gpLoadMoreBtn').style.display='none';
+}
+
+function toggleGpView(view, el){
+  if(view==='albums'){loadGpAlbums();}
+  else if(view==='grid'){showGpGridView();}
+}
+
+function showGpAlbumsView(){
+  document.getElementById('gpPhotosView').style.display='none';
+  document.getElementById('gpAlbumsView').style.display='block';
+  document.getElementById('gpAlbumDetail').style.display='none';
+}
+function showGpGridView(){
+  document.getElementById('gpPhotosView').style.display='block';
+  document.getElementById('gpAlbumsView').style.display='none';
+  document.getElementById('gpAlbumDetail').style.display='none';
+}
+function showGpAlbumsView(){
+  document.getElementById('gpPhotosView').style.display='none';
+  document.getElementById('gpAlbumsView').style.display='block';
+  document.getElementById('gpAlbumDetail').style.display='none';
+}
+
+// Keyboard nav for GP Lightbox
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('gpLightbox').style.display!=='flex')return;
+  if(e.key==='Escape')closeGpLightbox();
+  if(e.key==='ArrowLeft')gpLbNav(-1);
+  if(e.key==='ArrowRight')gpLbNav(1);
+});
+
+// Auto-restore GP token on page load
+(function gpAutoRestore(){
+  const saved=localStorage.getItem('gp_token');
+  const exp=parseInt(localStorage.getItem('gp_tokenExpiry')||0);
+  if(saved&&Date.now()<exp){gpAccessToken=saved;gpTokenExpiry=exp;}
+  // Pre-fill client id
+  const saved_cid=localStorage.getItem('gp_clientId')||localStorage.getItem('dg_clientId')||'';
+  const inp=document.getElementById('gpClientIdInput');
+  if(inp&&saved_cid)inp.value=saved_cid;
+})();
 
 // ══ INIT ══
 const _style=document.createElement('style');
